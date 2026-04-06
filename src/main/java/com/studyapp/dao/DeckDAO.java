@@ -11,4 +11,5 @@ public interface DeckDAO {
     public void delete(int deckID) throws SQLException;
     public Deck findByID(int deckID);
     public List<Deck> getAllDecks();
+    public int getLastID();
 }

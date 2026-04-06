@@ -15,12 +15,13 @@ import com.studyapp.model.ObjectFactory;
 public class DeckDAOImpl implements DeckDAO{
     @Override
     public void insert(Deck deck) throws SQLException {
-        String sql = "INSERT INTO deck (name, description, created_at) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO deck (deck_id, name, description, created_at) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, deck.getName());
-            ps.setString(2, deck.getDescription());
-            ps.setObject(3, deck.getCreatedAt());
+            ps.setInt(1, deck.getDeckID());
+            ps.setString(2, deck.getName());
+            ps.setString(3, deck.getDescription());
+            ps.setObject(4, deck.getCreatedAt());
             ps.executeUpdate();
         }
     }
@@ -39,7 +40,7 @@ public class DeckDAOImpl implements DeckDAO{
     }
 
     @Override
-    public void delete(int deckID) throws SQLException{
+    public void delete(int deckID) {
         String sql = "DELETE FROM deck WHERE deck_id=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -71,7 +72,7 @@ public class DeckDAOImpl implements DeckDAO{
         String sql = "SELECT * FROM deck";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
+             ResultSet rs = ps.executeQuery()) {
             while(rs.next()){
                 allDecks.add(new ObjectFactory().createNewDeck(rs));
             }
@@ -79,5 +80,18 @@ public class DeckDAOImpl implements DeckDAO{
             e.printStackTrace();
         }
         return allDecks;
+    }
+
+    @Override
+    public int getLastID(){
+        String sql = "SELECT MAX(deck_id) as max_id FROM deck";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt("max_id");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 999;
     }
 }

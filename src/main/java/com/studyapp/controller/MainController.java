@@ -3,7 +3,9 @@ package com.studyapp.controller;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.studyapp.dao.impl.CardReviewDAOImpl;
 import com.studyapp.dao.impl.DeckDAOImpl;
@@ -17,7 +19,7 @@ import com.studyapp.model.StudySession;
 
 //HANDLES ALL OPERATIONS THAT CONNECTS BACKEND WITH FRONTEND
 //INCLUDES:
-//CRUD OPEARTIONS
+//CRUD OPERATIONS
 //DATA/FILE HANDLING
 //AUTHENTICATION
 //DATA VALIDATION
@@ -33,6 +35,12 @@ public class MainController {
     private List<Flashcard> flashcards = new ArrayList<>();
     private List<StudySession> studySessions = new ArrayList<>();
     private List<CardReview> cardReviews = new ArrayList<>();
+
+    private List<Deck> addedDecks    = new ArrayList<>();
+    private Map<Integer, Deck> modifiedDecks = new HashMap<>();
+    private List<Integer> deletedDecks  = new ArrayList<>();
+
+    private int lastDeckID = 999;
 
     // --------- AUTHENTICATION --------------
     public boolean tryAutoLogin() {
@@ -56,16 +64,14 @@ public class MainController {
     }
 
     //------------- DMLs --------------------
-        //-----DECK--------
+    //-----DECK--------
     public void createDeck(String deckName, String description) throws CustomException{
-        try{
-            Deck deck = new Deck(999, deckName, description, LocalDateTime.now());
-            deckDaoImpl.insert(deck);
-        }catch(SQLException e){
-            throw new CustomException("Error adding deck.");
-        }
+        Deck deck = new Deck(++lastDeckID, deckName, description, LocalDateTime.now());
+        //TODO: Validate constraints first before adding
+        decks.add(deck);
+        addedDecks.add(deck);
     }
-    
+
     public void updateDeck(int deckID, String deckName, String description) throws CustomException{
         try{
             Deck deck = new Deck(deckID, deckName, description, LocalDateTime.now());
@@ -76,11 +82,22 @@ public class MainController {
     }
 
     public void deleteDeck(int deckID) throws CustomException{
-        try{
-            deckDaoImpl.delete(deckID);
-        }catch(SQLException e){
-            throw new CustomException("Error deleting deck.");
+        Deck existing = decks.stream()
+                .filter(i -> i.getDeckID() == deckID)
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("No record matched. No row was deleted.");
         }
+        decks.remove(existing);
+
+        if (addedDecks.contains(existing)) {
+            addedDecks.remove(existing);
+        } else {
+            modifiedDecks.remove(deckID);
+            deletedDecks.add(deckID);
+        }
+        //MUST ALSO DELETE ALL CARDS IN THIS DECK
+        //MUST ALSO DELETE ALL SESSIONS ASSOCIATED IN THIS DECK
     }
 
     public Deck findDeck(int deckID){
@@ -91,21 +108,51 @@ public class MainController {
         return new ArrayList<>(decks);
     }
 
-        //-----FLASHCARDS------
+    public void update(Deck deck) throws CustomException {
+        Deck existing = decks.stream()
+                .filter(i -> i.getDeckID() == deck.getDeckID())
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("Deck not found.");
+        }
+
+        decks.remove(existing);
+        decks.add(deck);
+
+        if (addedDecks.contains(existing)) {
+            addedDecks.remove(existing);
+            addedDecks.add(deck);
+        } else {
+            modifiedDecks.put(deck.getDeckID(), deck);
+        }
+    }
+
+    //-----FLASHCARDS------
     public List<Flashcard> allFlashcards(){
         return new ArrayList<>(flashcards);
     }
 
     public List<Flashcard> getFlashcardsByDeck(int deckID){
         return flashcards.stream()
-            .filter(card -> card.getDeck().getDeckID() == deckID)
-            .toList();
+                .filter(card -> card.getDeck().getDeckID() == deckID)
+                .toList();
+    }
+
+    public void updateFlashcard(Flashcard flashcard) throws CustomException {
+        //TODO: implement card update
+        throw new CustomException("Not implemented yet.");
+    }
+
+    public void deleteFlashcard(int flashcardID) throws CustomException {
+        //TODO: implement card deletion
+        throw new CustomException("Not implemented yet.");
     }
 
     //----------------- DATA -----------------------
     public void loadData() throws CustomException{
         try{
             decks = deckDaoImpl.getAllDecks();
+            lastDeckID = deckDaoImpl.getLastID();
             flashcards = flashcardDAOImpl.getAllFlashcards();
             studySessions = studySessionDAOImpl.getAllSessions();
             cardReviews = cardReviewDAOImpl.getAllReviews();

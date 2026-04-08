@@ -47,6 +47,7 @@ public class MainController {
     private Map<Integer, StudySession> modifiedStudySessions = new HashMap<>();
     private List<Integer> deletedStudySessions  = new ArrayList<>();
     private List<CardReview> addedCardReviews = new ArrayList<>();
+    private List<Integer> deletedCardReviews = new ArrayList<>();
 
 
     private int lastDeckID = 999;
@@ -114,7 +115,12 @@ public class MainController {
         for(Flashcard flashcard: getFlashcardsByDeck(deckID)){
             deleteFlashcard(flashcard.getCardID());
         }
-        //MUST ALSO DELETE ALL SESSIONS ASSOCIATED IN THIS DECK
+        //DELETE ALL SESSIONS ASSOCIATED IN THIS DECK
+        for(StudySession session: getAllSessions()){
+            if(session.getDeck().getDeckID() == deckID){
+                deleteSession(session.getSessionID());
+            }
+        }
     }
 
     public Deck findDeck(int deckID){
@@ -245,6 +251,30 @@ public class MainController {
         return new ArrayList<>(studySessions);
     }
 
+    public void deleteSession(int sessionID) throws CustomException{
+        StudySession existing = studySessions.stream()
+                .filter(i -> i.getSessionID() == sessionID)
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("No record matched. No row was deleted.");
+        }
+
+        for(CardReview review: cardReviews){
+            if(review.getStudySession().getSessionID() == sessionID){
+                deleteCardReview(review.getReviewID());
+            }
+        }
+
+        studySessions.remove(existing);
+
+        if (addedStudySessions.contains(existing)) {
+            addedStudySessions.remove(existing);
+        } else {
+            modifiedStudySessions.remove(sessionID);
+            deletedStudySessions.add(sessionID);
+        }
+    }
+
     //---------- CARD REVIEWS ----------------------//
     public void createCardReview(int sessionID, int cardID, LocalDateTime reviewedAt, boolean isCorrect) throws CustomException{
         StudySession studySession = studySessions.stream()
@@ -266,8 +296,30 @@ public class MainController {
         addedCardReviews.add(cardReview);
     }
 
-    public List<CardReview> getAllCardReview(){
+    public List<CardReview> getAllCardReviews(){
         return new ArrayList<>(cardReviews);
+    }
+
+    public List<CardReview> getCardReviewsBySession(int sessionID){
+        return cardReviews.stream()
+                .filter(i -> i.getStudySession().getSessionID() == sessionID)
+                .toList();
+    }
+
+    public void deleteCardReview(int reviewID) throws CustomException{
+        CardReview existing = cardReviews.stream()
+                .filter(i -> i.getReviewID() == reviewID)
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("No record matched. No row was deleted.");
+        }
+        cardReviews.remove(existing);
+
+        if (addedCardReviews.contains(existing)) {
+            addedCardReviews.remove(existing);
+        } else {
+            deletedCardReviews.add(reviewID);
+        }
     }
 
     //----------------- DATA -----------------------
@@ -284,6 +336,13 @@ public class MainController {
         }catch(Exception e){
             throw new CustomException("Failed to Load Data");
         }
+    }
+
+    public void saveChanges() throws CustomException{
+        // Persist added decks
+        // Persist modified decks
+        // Delete decks
+        // Similar for flashcards, study sessions, card reviews
     }
 
 }

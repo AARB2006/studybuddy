@@ -57,7 +57,9 @@ public class CLIView {
                 switch (choice) {
                     case 1 -> { manageDecks();}
                     case 2 -> { listCards(mc.allFlashcards());}
-                    case 4 -> { System.exit(0); }
+                    case 3 -> { printSessions();}
+                    case 4 -> { printCardReviews(mc.getAllCardReviews());}
+                    case 5 -> { System.exit(0);}
 
                     default -> System.out.println("Invalid choice.\n");
                 }
@@ -357,8 +359,11 @@ public class CLIView {
         }
 
         int cardCounter = 1;
+        boolean[] correctAnswers = new boolean[flashcards.size()];
+        int totalCorrect = 0;
         while (cardCounter <= flashcards.size()){
             System.out.println(BAR+"\n--- STUDYING " + deck.getName().toUpperCase() + " ---\n");
+            System.out.print("Score: " + totalCorrect + "/" + flashcards.size() + "\n");
             LocalDateTime reviewedAt = LocalDateTime.now();
             Flashcard card = flashcards.get(cardCounter - 1);
             System.out.println(cardCounter++ + ". " + card.getQuestion() + "\n");
@@ -368,9 +373,14 @@ public class CLIView {
             boolean isCorrect = false;
             if(answer.equals(card.getAnswer().toLowerCase())){
                 System.out.println("\nCorrect.\n");
+                if (!correctAnswers[cardCounter - 2]) {
+                    correctAnswers[cardCounter - 2] = true;
+                    totalCorrect++;
+                }
                 isCorrect = true;
             }else{
                 System.out.println("\nNot quite right.\n");
+                correctAnswers[cardCounter - 2] = false;
             }
 
             try {
@@ -407,7 +417,7 @@ public class CLIView {
                     break;
             }
         }
-        System.out.println("\n" + BAR + "\nWOW YOU FINISHED THIS DECK!\n"+ BAR + "\n");
+        System.out.println("\n" + BAR + "\nYOUR SCORE WAS " + totalCorrect + "/" + flashcards.size() + "\n"+ BAR + "\n");
     }
 
     void printSessions(){
@@ -462,11 +472,15 @@ public class CLIView {
             System.out.println("Ended at: " + (session.getEndedAt() != null ? session.getEndedAt() : "Still studying"));
 
             System.out.println("\nACTIONS: ");
-            System.out.println("1. BACK");
+            System.out.println("1. What I Reviewed");
+            System.out.println("2. BACK");
             System.out.print("Enter action: " );
             int choice = readInt();
             switch(choice){
                 case 1:
+                    printCardReviews(mc.getCardReviewsBySession(session.getSessionID()));
+                    return;
+                case 2:
                     return;
                 default:
                     System.out.println("Invalid choice.\n");
@@ -475,10 +489,9 @@ public class CLIView {
     }
 
     //---------- ALL ABOUT CARD REVIEW ----------------
-    void printCardReviews(){
+    void printCardReviews(List<CardReview> reviews){
         while (true) {
-            System.out.println(BAR + "\n--- ALL CARD REVIEWS ---");
-            List<CardReview> reviews = mc.getAllCardReviews();
+            System.out.println(BAR + "\n--- CARDS REVIEWED ---");
             if (reviews.isEmpty()) {
                 System.out.println("No card reviews available.\n");
                 return;
@@ -549,8 +562,9 @@ public class CLIView {
         System.out.println("--- STUDY ASSISTANT APP ---");
         System.out.println("  1. MANAGE decks");
         System.out.println("  2. ALL cards");
-        System.out.println("  3. SAVE changes to database");
-        System.out.println("  4. EXIT");
+        System.out.println("  3. All sessions");
+        System.out.println("  4. All card reviews");
+        System.out.println("  5. EXIT");
         System.out.print("SELECT: ");
     }
 
@@ -560,16 +574,6 @@ public class CLIView {
         while (true) {
             try { return Integer.parseInt(scanner.nextLine().trim()); }
             catch (NumberFormatException e) { System.out.print("Enter a valid number: "); }
-        }
-    }
-
-    void askNextAction() {
-        System.out.println(BAR + "\n");
-        System.out.println("  [ENTER] Return to menu");
-        System.out.println("  [0]     Exit");
-        String choice = readLine();
-        if ("0".equals(choice)) {
-            System.exit(0);
         }
     }
 }

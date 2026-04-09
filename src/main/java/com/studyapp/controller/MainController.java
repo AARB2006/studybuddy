@@ -43,9 +43,18 @@ public class MainController {
     private List<Flashcard> addedFlashcards = new ArrayList<>();
     private Map<Integer, Flashcard> modifiedFlashcards = new HashMap<>();
     private List<Integer> deletedFlashcards  = new ArrayList<>();
+    private List<StudySession> addedStudySessions = new ArrayList<>();
+    private Map<Integer, StudySession> modifiedStudySessions = new HashMap<>();
+    private List<Integer> deletedStudySessions  = new ArrayList<>();
+    private List<CardReview> addedCardReviews = new ArrayList<>();
+    private List<Integer> deletedCardReviews = new ArrayList<>();
+
 
     private int lastDeckID = 999;
     private int lastCardID = 999;
+    private int lastSessionID = 999;
+    private int lastReviewID = 999;
+
 
     // --------- AUTHENTICATION --------------
     public boolean tryAutoLogin() {
@@ -106,7 +115,12 @@ public class MainController {
         for(Flashcard flashcard: getFlashcardsByDeck(deckID)){
             deleteFlashcard(flashcard.getCardID());
         }
-        //MUST ALSO DELETE ALL SESSIONS ASSOCIATED IN THIS DECK
+        //DELETE ALL SESSIONS ASSOCIATED IN THIS DECK
+        for(StudySession session: getAllSessions()){
+            if(session.getDeck().getDeckID() == deckID){
+                deleteSession(session.getSessionID());
+            }
+        }
     }
 
     public Deck findDeck(int deckID){
@@ -198,6 +212,116 @@ public class MainController {
         }
     }
 
+    //---------- STUDY SESSIONS ----------------------//
+    public StudySession createStudySession(int deckID, LocalDateTime startedAt) throws CustomException{
+        Deck deck = decks.stream()
+                .filter(i -> i.getDeckID() == deckID)
+                .findFirst().orElse(null);
+        if (deck == null) {
+            throw new CustomException("Deck does not exist.");
+        }
+
+        StudySession studySession = new StudySession(++lastSessionID, deck, startedAt, null);
+        studySessions.add(studySession);
+        addedStudySessions.add(studySession);
+
+        return studySession;
+    }
+
+    public void updateEndStudySession(StudySession studySession) throws CustomException{
+        StudySession existing  = studySessions.stream()
+                .filter(i -> i.getSessionID() == studySession.getSessionID())
+                .findFirst().orElse(null);
+        if (studySession == null) {
+            throw new CustomException("Study session not found.");
+        }
+
+        studySessions.remove(existing);
+        studySessions.add(studySession);
+
+        if (addedStudySessions.contains(existing)){
+            addedStudySessions.remove(existing);
+            addedStudySessions.add(studySession);
+        }else{
+            modifiedStudySessions.put(studySession.getSessionID(), studySession);
+        }
+    }
+
+    public List<StudySession> getAllSessions(){
+        return new ArrayList<>(studySessions);
+    }
+
+    public void deleteSession(int sessionID) throws CustomException{
+        StudySession existing = studySessions.stream()
+                .filter(i -> i.getSessionID() == sessionID)
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("No record matched. No row was deleted.");
+        }
+
+        for(CardReview review: cardReviews){
+            if(review.getStudySession().getSessionID() == sessionID){
+                deleteCardReview(review.getReviewID());
+            }
+        }
+
+        studySessions.remove(existing);
+
+        if (addedStudySessions.contains(existing)) {
+            addedStudySessions.remove(existing);
+        } else {
+            modifiedStudySessions.remove(sessionID);
+            deletedStudySessions.add(sessionID);
+        }
+    }
+
+    //---------- CARD REVIEWS ----------------------//
+    public void createCardReview(int sessionID, int cardID, LocalDateTime reviewedAt, boolean isCorrect) throws CustomException{
+        StudySession studySession = studySessions.stream()
+                .filter(i -> i.getSessionID() == sessionID)
+                .findFirst().orElse(null);
+        if (studySession == null) {
+            throw new CustomException("Study session not found.");
+        }
+
+        Flashcard flashcard = flashcards.stream()
+                .filter(i -> i.getCardID() == cardID)
+                .findFirst().orElse(null);
+        if (flashcard == null) {
+            throw new CustomException("Flashcard not found.");
+        }
+
+        CardReview cardReview = new CardReview(++lastReviewID, studySession, flashcard, reviewedAt, isCorrect);
+        cardReviews.add(cardReview);
+        addedCardReviews.add(cardReview);
+    }
+
+    public List<CardReview> getAllCardReviews(){
+        return new ArrayList<>(cardReviews);
+    }
+
+    public List<CardReview> getCardReviewsBySession(int sessionID){
+        return cardReviews.stream()
+                .filter(i -> i.getStudySession().getSessionID() == sessionID)
+                .toList();
+    }
+
+    public void deleteCardReview(int reviewID) throws CustomException{
+        CardReview existing = cardReviews.stream()
+                .filter(i -> i.getReviewID() == reviewID)
+                .findFirst().orElse(null);
+        if (existing == null) {
+            throw new CustomException("No record matched. No row was deleted.");
+        }
+        cardReviews.remove(existing);
+
+        if (addedCardReviews.contains(existing)) {
+            addedCardReviews.remove(existing);
+        } else {
+            deletedCardReviews.add(reviewID);
+        }
+    }
+
     //----------------- DATA -----------------------
     public void loadData() throws CustomException{
         try{
@@ -207,9 +331,18 @@ public class MainController {
             lastCardID = flashcardDAOImpl.getLastID();
             studySessions = studySessionDAOImpl.getAllSessions();
             cardReviews = cardReviewDAOImpl.getAllReviews();
+            lastReviewID = cardReviewDAOImpl.getLastID();
+            lastSessionID = studySessionDAOImpl.getLastID();
         }catch(Exception e){
             throw new CustomException("Failed to Load Data");
         }
+    }
+
+    public void saveChanges() throws CustomException{
+        // Persist added decks
+        // Persist modified decks
+        // Delete decks
+        // Similar for flashcards, study sessions, card reviews
     }
 
 }

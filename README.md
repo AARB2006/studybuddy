@@ -1,21 +1,40 @@
 # Study Assistant
 
-Study Assistant is a Java Maven application for managing study decks, flashcards, and study-related records backed by MySQL. The project currently includes a command-line interface for logging in, viewing decks, and browsing cards, with placeholder GUI classes prepared for future work.
+Study Assistant is a JavaFX desktop application for managing flashcards and study materials. It is built with Java, Maven, and MySQL, and currently serves as a working prototype for a study tool with a desktop interface.
 
 ## Features
 
-- CLI-based login using MySQL credentials
-- Deck listing and deck detail viewing
-- Flashcard listing and card detail viewing
-- DAO-based data access layer for decks, flashcards, study sessions, and card reviews
-- Sample JSON data for import or testing reference
+- MySQL login screen for connecting to the database
+- JavaFX desktop UI
+- Dashboard, My Cards, and All Cards screens
+- Flashcard, deck, study session, and review models
+- DAO and controller structure for database-driven features
+- Included SQL setup file and sample JSON data
 
 ## Tech Stack
 
 - Java 21
+- JavaFX
 - Maven
 - MySQL
 - Gson
+
+## Requirements
+
+- JDK 21
+- Maven
+- MySQL Server
+
+## Setup
+
+1. Create the MySQL database for the project.
+2. Import [`TestDB.sql`](./TestDB.sql) to create the tables and sample records.
+3. Make sure your MySQL server is running.
+4. Open the project folder and run:
+
+```powershell
+mvn javafx:run
+```
 
 ## Project Structure
 
@@ -25,46 +44,15 @@ study-assistant/
 |-- README.md
 |-- TestDB.sql
 |-- sample-data/
-|   `-- sample-deck.json
-`-- src/
-    |-- main/
-    |   |-- java/
-    |   `-- resources/
-    `-- test/
+`-- src/main/java/com/studyapp/
+    |-- controller/
+    |-- dao/
+    |-- db/
+    |-- model/
+    |-- service/
+    `-- view/
 ```
 
-## Requirements
+## Current Status
 
-- JDK 21
-- Maven 3.9+
-- MySQL Server
-
-## Database Setup
-
-1. Create the `study_assistant` database in MySQL.
-2. Import [`TestDB.sql`](./TestDB.sql) to create the tables and seed data.
-3. Confirm the database is running before starting the application.
-
-
-## Run
-
-initialize the database first, then you can run the application using Maven:
-
-```powershell
-cd C:\...\study-assistant
-mvn javafx:run
-```
-
-If you want to compile and run without Maven:
-
-```powershell
-cd C:\...\study-assistant
-javac -d out (Get-ChildItem -Recurse -Filter *.java src\main\java | ForEach-Object FullName)
-java -cp out com.studyapp.Main
-```
-
-## Current Notes
-
-- The CLI menu options for viewing decks and cards are working.
-- Some menu items and GUI classes are still placeholders for future implementation.
-- Database credentials may be saved locally in a `.env` file during login.
+This project is still in prototype stage. The main JavaFX navigation flow is available, but some screens still use hardcoded sample data and a few features are not fully connected yet.

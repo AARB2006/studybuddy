@@ -98,6 +98,22 @@ public class FlashcardController {
         }
     }
 
+    void saveFlashcardToDB() throws CustomException{
+        try{
+            for(Flashcard flashcard: addedFlashcards){
+                flashcardDAOImpl.insert(flashcard);
+            }
+            for(Flashcard flashcard: modifiedFlashcards.values()){
+                flashcardDAOImpl.update(flashcard);
+            }
+            for(int flashcardID: deletedFlashcards){
+                flashcardDAOImpl.delete(flashcardID);
+            }
+        }catch(Exception e){
+            throw new CustomException("Failed to Save Flashcards");
+        }
+    }
+
     void validateConstraints(Flashcard flashcard) throws CustomException{
         //VALIDATE ID UNIQUENESS
         if(flashcards.stream().anyMatch(i -> (i.getCardID() == flashcard.getCardID()) && (i != flashcard))) {
@@ -117,8 +133,8 @@ public class FlashcardController {
         //CHECK IF DIFFICULTY IS VALID
         if(flashcard.getDifficulty() == null || flashcard.getDifficulty().trim().isEmpty()) {
             throw new CustomException("Difficulty field cannot be empty.");
-        }else if(!flashcard.getDifficulty().equalsIgnoreCase("Easy") ||
-                !flashcard.getDifficulty().equalsIgnoreCase("Medium") ||
+        }else if(!flashcard.getDifficulty().equalsIgnoreCase("Easy") &&
+                !flashcard.getDifficulty().equalsIgnoreCase("Medium") &&
                 !flashcard.getDifficulty().equalsIgnoreCase("Hard")){
             throw new CustomException("Difficulty must be either Easy, Medium, or Hard.");
         }

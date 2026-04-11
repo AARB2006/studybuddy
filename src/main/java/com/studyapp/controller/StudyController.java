@@ -116,4 +116,20 @@ public class StudyController {
             throw new CustomException("Failed to Load Study Sessions");
         }
     }
+
+    void saveStudySessionToDB() throws CustomException{
+        try{
+            for(StudySession session: addedStudySessions){
+                studySessionDAOImpl.insert(session);
+            }
+            for(StudySession session: modifiedStudySessions.values()){
+                studySessionDAOImpl.updateEnd(session.getSessionID(), session.getEndedAt());
+            }
+            for(int sessionID: deletedStudySessions){
+                studySessionDAOImpl.delete(sessionID);
+            }
+        }catch(Exception e){
+            throw new CustomException("Failed to Save Study Sessions");
+        }
+    }
 }

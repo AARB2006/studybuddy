@@ -1,17 +1,8 @@
 package com.studyapp.controller;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.studyapp.dao.FlashcardDAO;
-import com.studyapp.dao.impl.CardReviewDAOImpl;
-import com.studyapp.dao.impl.DeckDAOImpl;
-import com.studyapp.dao.impl.FlashcardDAOImpl;
-import com.studyapp.dao.impl.StudySessionDAOImpl;
 import com.studyapp.db.DatabaseConnection;
 import com.studyapp.model.CardReview;
 import com.studyapp.model.Deck;
@@ -42,6 +33,7 @@ public class MainController {
     public boolean tryAutoLogin() {
         if (!CredentialHandler.validateCredentials()) return false;
         try {
+            DatabaseConnection.initializeDatabase();
             loadData();
             return true;
         } catch (CustomException e) {
@@ -55,6 +47,7 @@ public class MainController {
         }
         CredentialHandler.save(username, password);
         DatabaseConnection.setCredentials(username, password);
+        DatabaseConnection.initializeDatabase();
         loadData();
     }
 
@@ -148,10 +141,11 @@ public class MainController {
     }
 
     public void saveChanges() throws CustomException{
-        // Persist added decks
-        // Persist modified decks
-        // Delete decks
-        // Similar for flashcards, study sessions, card reviews
+        deckController.saveDeckToDB();
+        flashcardController.saveFlashcardToDB();
+        studyController.saveStudySessionToDB();
+        reviewController.saveReviewToDB();
+        System.out.println("Changes Saved to Database.");
     }
 
 }

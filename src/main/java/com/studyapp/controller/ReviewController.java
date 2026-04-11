@@ -74,6 +74,20 @@ public class ReviewController {
         lastReviewID = cardReviewDAOImp.getLastID() + 1;
     }
 
+    void saveReviewToDB() throws CustomException{
+        try{
+            for(CardReview review: addedCardReviews){
+                cardReviewDAOImp.insert(review);
+            }
+            for(int reviewID: deletedCardReviews){
+                cardReviewDAOImp.delete(reviewID);
+            }
+
+        }catch(Exception e){
+            throw new CustomException(e.getMessage());
+        }
+    }
+
     void validateConstraints(CardReview cardReview) throws CustomException{
         //VALIDATE UNIQUE ID
         if(cardReviews.stream().anyMatch(i -> (i.getReviewID() == cardReview.getReviewID()) && (i != cardReview))){

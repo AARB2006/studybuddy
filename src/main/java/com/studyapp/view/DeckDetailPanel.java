@@ -26,24 +26,27 @@ import javafx.scene.text.Font;
 public class DeckDetailPanel {
 
     private static final String PRIMARY_BLUE = "#2a548f";
-    private static final String HEADER_BLUE = "#41729f";
+    private static final String HEADER_BLUE  = "#41729f";
     private static final String BORDER_STYLE = "-fx-border-color: " + PRIMARY_BLUE
             + "; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;";
     private static final String INACTIVE_STYLE = "-fx-background-color: white; -fx-text-fill: black;"
             + " -fx-border-color: " + PRIMARY_BLUE
             + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15;";
+    private static final String ACTIVE_BTN_STYLE = "-fx-background-color: #e6eaf5; -fx-text-fill: black;"
+            + " -fx-border-color: " + PRIMARY_BLUE
+            + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
 
     // ── Entry point ───────────────────────────────────────────────────────────
 
     public static void show(BorderPane mainLayout, DeckData dd) {
         Node savedSidebar = mainLayout.getLeft();
-        mainLayout.setLeft(buildSidebar(mainLayout, savedSidebar));
+        mainLayout.setLeft(buildSidebar(mainLayout, savedSidebar, dd));
         mainLayout.setCenter(buildContent(dd));
     }
 
-    // ── Inner sidebar (Edit / Cards / Study / DELETE / BACK) ──────────────────
+    // ── Sidebar ───────────────────────────────────────────────────────────────
 
-    private static VBox buildSidebar(BorderPane mainLayout, Node savedSidebar) {
+    private static VBox buildSidebar(BorderPane mainLayout, Node savedSidebar, DeckData dd) {
         VBox sidebar = new VBox(15);
         sidebar.setPadding(new Insets(20));
         sidebar.setPrefWidth(250);
@@ -61,13 +64,30 @@ public class DeckDetailPanel {
         buttonBox.setStyle(BORDER_STYLE);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
+        // Edit — disabled for now
         Button editBtn = createDisabledBtn("Edit");
-        Button cardsBtn = createDisabledBtn("Cards");
+
+        // Cards — ENABLED → storyboard 3 (AllCardsPanel for this deck)
+        Button cardsBtn = new Button("Cards");
+        cardsBtn.setMaxWidth(Double.MAX_VALUE);
+        cardsBtn.setFont(Font.font("Serif", 16));
+        cardsBtn.setStyle(ACTIVE_BTN_STYLE);
+        cardsBtn.setOnMouseEntered(e -> cardsBtn.setStyle(
+                "-fx-background-color: #d0dcf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE
+                + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;"));
+        cardsBtn.setOnMouseExited(e -> cardsBtn.setStyle(ACTIVE_BTN_STYLE));
+        cardsBtn.setOnAction(e -> {
+            mainLayout.setLeft(savedSidebar);
+            AllCardsPanel.show(mainLayout, dd, savedSidebar);
+        });
+
+        // Study — disabled for now
         Button studyBtn = createDisabledBtn("Study");
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
+        // Delete — disabled for now
         Button deleteBtn = new Button("DELETE");
         deleteBtn.setMaxWidth(Double.MAX_VALUE);
         deleteBtn.setFont(Font.font("Serif", 16));
@@ -76,6 +96,7 @@ public class DeckDetailPanel {
                 + " -fx-border-color: #cc0000; -fx-border-radius: 5; -fx-background-radius: 5;"
                 + " -fx-padding: 10 15;");
 
+        // Back
         Button backBtn = new Button("BACK");
         backBtn.setMaxWidth(Double.MAX_VALUE);
         backBtn.setFont(Font.font("Serif", 16));
@@ -86,9 +107,9 @@ public class DeckDetailPanel {
                 + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
                 + " -fx-padding: 10 15; -fx-cursor: hand;";
         backBtn.setStyle(backDefault);
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle(backHover));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle(backDefault));
-        backBtn.setOnAction(e -> {
+        backBtn.setOnMouseEntered(ev -> backBtn.setStyle(backHover));
+        backBtn.setOnMouseExited(ev -> backBtn.setStyle(backDefault));
+        backBtn.setOnAction(ev -> {
             mainLayout.setLeft(savedSidebar);
             MainFrame.activateMyDecks();
             mainLayout.setCenter(MyDeckPanel.create(mainLayout));
@@ -121,7 +142,6 @@ public class DeckDetailPanel {
         mainContent.setStyle(BORDER_STYLE);
         VBox.setVgrow(mainContent, Priority.ALWAYS);
 
-        // ── Header ────────────────────────────────────────────────────────────
         Label header = new Label(dd.deck().getName());
         header.setFont(Font.font("Serif", 32));
         header.setTextFill(Color.WHITE);
@@ -130,7 +150,6 @@ public class DeckDetailPanel {
         header.setStyle("-fx-background-color: " + HEADER_BLUE
                 + "; -fx-background-radius: 8; -fx-padding: 10;");
 
-        // ── Info box ──────────────────────────────────────────────────────────
         HBox infoBox = new HBox(40);
         infoBox.setPadding(new Insets(15));
         infoBox.setStyle(BORDER_STYLE);
@@ -155,9 +174,7 @@ public class DeckDetailPanel {
 
         infoBox.getChildren().addAll(leftInfo, rightInfo);
 
-        // ── Progress section ──────────────────────────────────────────────────
         VBox progressSection = new VBox(10);
-
         Label progressTitle = new Label("Progress:");
         progressTitle.setFont(Font.font("Serif", 16));
 
@@ -171,12 +188,9 @@ public class DeckDetailPanel {
         pctLbl.setTextFill(Color.WHITE);
 
         StackPane progressStack = new StackPane(bar, pctLbl);
-
         progressSection.getChildren().addAll(progressTitle, progressStack);
 
-        // ── Cards Preview ─────────────────────────────────────────────────────
         VBox previewSection = new VBox(15);
-
         Label previewHeader = new Label("Cards Preview");
         previewHeader.setFont(Font.font("Serif", 20));
         previewHeader.setMaxWidth(Double.MAX_VALUE);
@@ -204,7 +218,6 @@ public class DeckDetailPanel {
         }
 
         previewSection.getChildren().addAll(previewHeader, grid);
-
         mainContent.getChildren().addAll(header, infoBox, progressSection, previewSection);
         wrapper.getChildren().add(mainContent);
         return wrapper;

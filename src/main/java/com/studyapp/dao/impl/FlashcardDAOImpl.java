@@ -12,7 +12,8 @@ import com.studyapp.db.DatabaseConnection;
 import com.studyapp.model.Flashcard;
 import com.studyapp.model.ObjectFactory;
 
-public class FlashcardDAOImpl implements FlashcardDAO{
+public class FlashcardDAOImpl implements FlashcardDAO {
+
     @Override
     public void insert(Flashcard flashcard) throws SQLException {
         String sql = "INSERT INTO card (deck_id, question, answer, difficulty, created_at) VALUES (?, ?, ?, ?, ?)";
@@ -30,7 +31,7 @@ public class FlashcardDAOImpl implements FlashcardDAO{
     @Override
     public void update(Flashcard flashcard) throws SQLException {
         String sql = "UPDATE card SET question = ?, answer = ?, difficulty = ? WHERE card_id = ?";
-        try(Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, flashcard.getQuestion());
             ps.setString(2, flashcard.getAnswer());
@@ -41,7 +42,7 @@ public class FlashcardDAOImpl implements FlashcardDAO{
     }
 
     @Override
-    public void delete(int cardID) throws SQLException{
+    public void delete(int cardID) throws SQLException {
         String sql = "DELETE FROM card WHERE card_id=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -73,7 +74,7 @@ public class FlashcardDAOImpl implements FlashcardDAO{
         String sql = "SELECT * FROM card";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 allCards.add(new ObjectFactory().createNewCard(rs));
             }
@@ -84,7 +85,25 @@ public class FlashcardDAOImpl implements FlashcardDAO{
     }
 
     @Override
-    public int getLastID(){
+    public List<Flashcard> getByDeck(int deckId) {
+        List<Flashcard> cards = new ArrayList<>();
+        String sql = "SELECT * FROM card WHERE deck_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deckId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    cards.add(new ObjectFactory().createNewCard(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return cards;
+    }
+
+    @Override
+    public int getLastID() {
         String sql = "SELECT MAX(card_id) as max_id FROM card";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);

@@ -1,19 +1,90 @@
-{
-  "deck_name": "CMSC 127 Finals",
-  "description": "Key topics for the finals exam",
-  "exported_at": "2025-04-10T20:00:00",
-  "cards": [
-    {
-      "question": "What does JDBC stand for?",
-      "answer": "Java Database Connectivity"
-    },
-    {
-      "question": "What is normalization?",
-      "answer": "The process of organizing a database to reduce redundancy"
-    },
-    {
-      "question": "What is a Primary Key?",
-      "answer": "A unique identifier for each record in a table"
-    }
-  ]
-}
+[
+  {
+    "deck_name": "CMSC 127 Finals",
+    "description": "Key topics for the finals exam",
+    "exported_at": "2025-04-10T20:00:00",
+    "cards": [
+      {
+        "question": "What does JDBC stand for?",
+        "answer": "Java Database Connectivity"
+      },
+      {
+        "question": "What is normalization?",
+        "answer": "The process of organizing a database to reduce redundancy"
+      },
+      {
+        "question": "What is a Primary Key?",
+        "answer": "A unique identifier for each record in a table"
+      }
+    ]
+  },
+  {
+    "deck_name": "SQL & Querying",
+    "description": "Common SQL clauses and set operations",
+    "exported_at": "2026-04-13T15:00:00",
+    "cards": [
+      {
+        "question": "What is the difference between WHERE and HAVING?",
+        "answer": "WHERE filters rows before grouping; HAVING filters groups after the GROUP BY clause is applied"
+      },
+      {
+        "question": "Which SQL keyword is used to return only different values?",
+        "answer": "DISTINCT"
+      },
+      {
+        "question": "What does the 'UNION' operator do?",
+        "answer": "Combines the result-set of two or more SELECT statements (keeping only distinct values)"
+      },
+      {
+        "question": "In SQL, what is a 'Subquery'?",
+        "answer": "A query nested inside another query, typically within the WHERE or FROM clause"
+      }
+    ]
+  },
+  {
+    "deck_name": "Storage & Architecture",
+    "description": "Physical storage, indexing, and DBMS components",
+    "exported_at": "2026-04-13T15:05:00",
+    "cards": [
+      {
+        "question": "What is a 'Clustered Index'?",
+        "answer": "An index that defines the physical order in which data is stored in a table"
+      },
+      {
+        "question": "What is the role of the Query Optimizer?",
+        "answer": "To determine the most efficient way to execute a given query by considering different execution plans"
+      },
+      {
+        "question": "What is 'Vertical Partitioning'?",
+        "answer": "Splitting a table into multiple tables containing fewer columns"
+      },
+      {
+        "question": "What is a Write-Ahead Log (WAL)?",
+        "answer": "A family of techniques for providing atomicity and durability by logging changes before they are written to the database"
+      }
+    ]
+  },
+  {
+    "deck_name": "Relational Algebra",
+    "description": "The mathematical theory behind SQL",
+    "exported_at": "2026-04-13T15:10:00",
+    "cards": [
+      {
+        "question": "What is the symbol for the 'Selection' operation?",
+        "answer": "Sigma (σ)"
+      },
+      {
+        "question": "What is the 'Projection' operation used for?",
+        "answer": "To choose specific columns (attributes) from a relation; denoted by Pi (π)"
+      },
+      {
+        "question": "What is a 'Natural Join'?",
+        "answer": "An operation that joins two relations based on all columns that have the same name"
+      },
+      {
+        "question": "What does the 'Cartesian Product' (X) result in?",
+        "answer": "A relation that pairs every tuple of one relation with every tuple of another"
+      }
+    ]
+  }
+]

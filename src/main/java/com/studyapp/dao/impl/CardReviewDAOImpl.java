@@ -11,64 +11,65 @@ import com.studyapp.dao.CardReviewDAO;
 import com.studyapp.db.DatabaseConnection;
 import com.studyapp.model.CardReview;
 import com.studyapp.model.ObjectFactory;
-import com.studyapp.model.StudySession;
 
-public class CardReviewDAOImpl implements CardReviewDAO{
+public class CardReviewDAOImpl implements CardReviewDAO {
+
     @Override
-    public void insert(CardReview cardReview) throws SQLException{
-        String sql = "INSERT INTO card_review (reeview_id, session_id, card_id, reviewed_at, is_correct) VALUES (?, ?, ?, ?, ?)";
-        try(Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, cardReview.getReviewID());
-            ps.setInt(2, cardReview.getStudySession().getSessionID());
-            ps.setInt(3, cardReview.getFlashcard().getCardID());
-            ps.setObject(4, cardReview.getReviewedAt());
-            ps.setBoolean(5, cardReview.isCorrect());
+    public void insert(CardReview cardReview) throws SQLException {
+        // review_id is AUTO_INCREMENT — do not include it in the INSERT
+        String sql = "INSERT INTO Card_Review (session_id, card_id, reviewed_at, is_correct) "
+                   + "VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, cardReview.getStudySession().getSessionID());
+            ps.setInt(2, cardReview.getFlashcard().getCardID());
+            ps.setObject(3, cardReview.getReviewedAt());
+            ps.setBoolean(4, cardReview.isCorrect());
             ps.executeUpdate();
         }
     }
 
     @Override
-    public CardReview findByID(int reviewedID){
-        String sql = "SELECT * FROM card_review WHERE review_id = ?";
-        try(Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)){
-            try(ResultSet rs = ps.executeQuery()){
-                if(rs.next()) return new ObjectFactory().createNewReview(rs);
+    public CardReview findByID(int reviewedID) {
+        String sql = "SELECT * FROM Card_Review WHERE review_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, reviewedID); // fixed: was missing before executeQuery
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return new ObjectFactory().createNewReview(rs);
             }
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
     @Override
-    public List<CardReview> getAllReviews(){
+    public List<CardReview> getAllReviews() {
         List<CardReview> allReviews = new ArrayList<>();
-        String sql = "SELECT * FROM card_review";
+        String sql = "SELECT * FROM Card_Review";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 allReviews.add(new ObjectFactory().createNewReview(rs));
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return allReviews;
     }
 
     @Override
-    public int getLastID(){
-        String sql = "SELECT MAX(review_id) as max_id FROM card_review";
+    public int getLastID() {
+        String sql = "SELECT MAX(review_id) AS max_id FROM Card_Review";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) return rs.getInt("max_id");
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 999;
+        return 0;
     }
 }

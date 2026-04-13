@@ -12,24 +12,23 @@ import com.studyapp.db.DatabaseConnection;
 import com.studyapp.model.Deck;
 import com.studyapp.model.ObjectFactory;
 
-public class DeckDAOImpl implements DeckDAO{
+public class DeckDAOImpl implements DeckDAO {
+
     @Override
     public void insert(Deck deck) throws SQLException {
-        String sql = "INSERT INTO deck (deck_id, name, description, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Deck (name, description, created_at) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, deck.getDeckID());
-            ps.setString(2, deck.getName());
-            ps.setString(3, deck.getDescription());
-            ps.setObject(4, deck.getCreatedAt());
+            ps.setString(1, deck.getName());
+            ps.setString(2, deck.getDescription());
+            ps.setObject(3, deck.getCreatedAt());
             ps.executeUpdate();
         }
     }
 
-    /// ONLY NAME AND DESCRIPTION CAN BE UPDATED
     @Override
     public void update(Deck deck) throws SQLException {
-        String sql = "UPDATE deck SET name = ?, description = ? WHERE deck_id = ?";
+        String sql = "UPDATE Deck SET name = ?, description = ? WHERE deck_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, deck.getName());
@@ -41,7 +40,7 @@ public class DeckDAOImpl implements DeckDAO{
 
     @Override
     public void delete(int deckID) {
-        String sql = "DELETE FROM deck WHERE deck_id=?";
+        String sql = "DELETE FROM Deck WHERE deck_id=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, deckID);
@@ -53,7 +52,7 @@ public class DeckDAOImpl implements DeckDAO{
 
     @Override
     public Deck findByID(int deckID) {
-        String sql = "SELECT * FROM deck WHERE deck_id=?";
+        String sql = "SELECT * FROM Deck WHERE deck_id=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, deckID);
@@ -67,13 +66,13 @@ public class DeckDAOImpl implements DeckDAO{
     }
 
     @Override
-    public List<Deck> getAllDecks(){
+    public List<Deck> getAllDecks() {
         List<Deck> allDecks = new ArrayList<>();
-        String sql = "SELECT * FROM deck";
+        String sql = "SELECT * FROM Deck";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while(rs.next()){
+            while (rs.next()) {
                 allDecks.add(new ObjectFactory().createNewDeck(rs));
             }
         } catch (SQLException e) {
@@ -83,8 +82,8 @@ public class DeckDAOImpl implements DeckDAO{
     }
 
     @Override
-    public int getLastID(){
-        String sql = "SELECT MAX(deck_id) as max_id FROM deck";
+    public int getLastID() {
+        String sql = "SELECT MAX(deck_id) as max_id FROM Deck";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -92,6 +91,6 @@ public class DeckDAOImpl implements DeckDAO{
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 999;
+        return 0;
     }
 }

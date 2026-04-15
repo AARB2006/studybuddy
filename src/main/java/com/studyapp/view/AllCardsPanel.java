@@ -8,7 +8,6 @@ import com.studyapp.model.Flashcard;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
@@ -59,12 +58,7 @@ public class AllCardsPanel {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button studyBtn = new Button("Study Disabled");
-        studyBtn.setDisable(true);
-        studyBtn.setFont(Font.font("Serif", 16));
-        studyBtn.setStyle("-fx-background-color: #f8fafc; -fx-text-fill: #94a3b8; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 30;");
-
-        actionRow.getChildren().addAll(helperLabel, spacer, studyBtn);
+        actionRow.getChildren().addAll(helperLabel, spacer);
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);

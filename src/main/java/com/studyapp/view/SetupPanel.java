@@ -1,7 +1,7 @@
 package com.studyapp.view;
 
-import com.studyapp.controller.CredentialHandler;
-import com.studyapp.db.DatabaseConnection;
+import com.studyapp.controller.CustomException;
+import com.studyapp.controller.MainController;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,7 +18,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class SetupPanel {
-    private static final CredentialHandler CREDENTIAL_HANDLER = new CredentialHandler();
+    private static final MainController MAIN_CONTROLLER = new MainController();
     private static final double SETUP_WIDTH = 420;
     private static final double SETUP_HEIGHT = 580;
 
@@ -71,7 +71,7 @@ public class SetupPanel {
         connectBtn.setOnMouseEntered(e -> connectBtn.setStyle(hoverStyle));
         connectBtn.setOnMouseExited(e -> connectBtn.setStyle(defaultStyle));
 
-        if (CREDENTIAL_HANDLER.checkForCred() && CREDENTIAL_HANDLER.readAndValidate()) {
+        if (MAIN_CONTROLLER.tryAutoLogin()) {
             onSuccess.run();
         }
 
@@ -83,11 +83,10 @@ public class SetupPanel {
             connectBtn.setText("Signing in...");
             errorLabel.setText("");
 
-            if (DatabaseConnection.authenticate(username, password)) {
-                DatabaseConnection.setCredentials(username, password);
-                CREDENTIAL_HANDLER.write(username, password);
+            try {
+                MAIN_CONTROLLER.login(username, password);
                 onSuccess.run();
-            } else {
+            } catch (CustomException ex) {
                 errorLabel.setText("Database login failed. Check your MySQL username and password.");
             }
 

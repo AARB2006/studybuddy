@@ -47,6 +47,12 @@ public class ReviewController {
         return new ArrayList<>(cardReviews);
     }
 
+    public List<CardReview> getCorrectReviews(){
+        return cardReviews.stream()
+                .filter(CardReview::isCorrect)
+                .toList();
+    }
+
     public List<CardReview> getCardReviewsBySession(int sessionID){
         return cardReviews.stream()
                 .filter(i -> i.getStudySession().getSessionID() == sessionID)
@@ -82,10 +88,16 @@ public class ReviewController {
             for(int reviewID: deletedCardReviews){
                 cardReviewDAOImp.delete(reviewID);
             }
+            addedCardReviews.clear();
+            deletedCardReviews.clear();
 
         }catch(Exception e){
             throw new CustomException(e.getMessage());
         }
+    }
+
+    public boolean hasPendingChanges() {
+        return !addedCardReviews.isEmpty() || !deletedCardReviews.isEmpty();
     }
 
     void validateConstraints(CardReview cardReview) throws CustomException{

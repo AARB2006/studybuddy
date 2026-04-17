@@ -6,10 +6,8 @@ import com.studyapp.model.Deck;
 import com.studyapp.model.StudySession;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StudyController {
     private  MainController mc;
@@ -49,7 +47,7 @@ public class StudyController {
         StudySession existing  = studySessions.stream()
                 .filter(i -> i.getSessionID() == studySession.getSessionID())
                 .findFirst().orElse(null);
-        if (studySession == null) {
+        if (existing == null) {
             throw new CustomException("Study session not found.");
         }
 
@@ -70,6 +68,19 @@ public class StudyController {
 
     public List<StudySession> getAllSessions(){
         return new ArrayList<>(studySessions);
+    }
+
+    public List<StudySession> getRecentSessions() {
+        return studySessions.stream()
+                .sorted(Comparator.comparing(StudySession::getEndedAt).reversed())
+                .limit(3)
+                .collect(Collectors.toList());
+    }
+
+    public List<StudySession> getSpecificDeckSession(int deckID){
+        return studySessions.stream()
+                .filter(i -> i.getDeck().getDeckID() == deckID)
+                .toList();
     }
 
     public void deleteSession(int sessionID) throws CustomException{
@@ -128,8 +139,17 @@ public class StudyController {
             for(int sessionID: deletedStudySessions){
                 studySessionDAOImpl.delete(sessionID);
             }
+            addedStudySessions.clear();
+            modifiedStudySessions.clear();
+            deletedStudySessions.clear();
         }catch(Exception e){
             throw new CustomException("Failed to Save Study Sessions");
         }
+    }
+
+    public boolean hasPendingChanges() {
+        return !addedStudySessions.isEmpty()
+                || !modifiedStudySessions.isEmpty()
+                || !deletedStudySessions.isEmpty();
     }
 }

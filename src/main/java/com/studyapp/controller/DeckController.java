@@ -119,9 +119,16 @@ public class DeckController {
             for(int deckID: deletedDecks){
                 deckDaoImpl.delete(deckID);
             }
+            addedDecks.clear();
+            modifiedDecks.clear();
+            deletedDecks.clear();
         }catch(Exception e){
             throw new CustomException("Failed to Save Decks");
         }
+    }
+
+    public boolean hasPendingChanges() {
+        return !addedDecks.isEmpty() || !modifiedDecks.isEmpty() || !deletedDecks.isEmpty();
     }
 
     void validateConstraints(Deck deck) throws CustomException{

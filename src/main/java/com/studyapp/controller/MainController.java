@@ -1,7 +1,9 @@
 package com.studyapp.controller;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.studyapp.db.DatabaseConnection;
 import com.studyapp.model.CardReview;
@@ -82,6 +84,18 @@ public class MainController {
         return flashcardController.getFlashcardsByDeck(deckID);
     }
 
+    public List<Flashcard> getHardFlashcards(){
+        return flashcardController.getHardFlashcards();
+    }
+
+    public List<Flashcard> getMediumFlashcards(){
+        return flashcardController.getMediumFlashcards();
+    }
+
+    public List<Flashcard> getEasyFlashcards(){
+        return flashcardController.getEasyFlashcards();
+    }
+
     public void createFlashcard(int deckID, String question, String answer, String difficulty) throws CustomException{
         flashcardController.createFlashcard(deckID, question, answer, difficulty);
     }
@@ -121,11 +135,47 @@ public class MainController {
     }
 
     public List<CardReview> getCardReviewsBySession(int sessionID){
-       return reviewController.getCardReviewsBySession(sessionID);
+        return reviewController.getCardReviewsBySession(sessionID);
     }
 
     public void deleteCardReview(int reviewID) throws CustomException {
         reviewController.deleteCardReview(reviewID);
+    }
+
+    //------------ STATISTICS  -------------------//
+    public int getDeckProgress(int deckID){
+        List<CardReview> allReviews = studyController.getSpecificDeckSession(deckID).stream()
+                .flatMap(session -> getCardReviewsBySession(session.getSessionID()).stream())
+                .toList()   ;
+
+
+        int correctlyReviewed = (int) allReviews.stream()
+                .filter(CardReview::isCorrect)
+                .count();
+
+        int total = getFlashcardsByDeck(deckID).size();
+
+        return (correctlyReviewed*100/total);
+    }
+
+    public int getAccuracy(){
+        int allCorrectReviews = reviewController.getCorrectReviews().size();
+        int allReviews = getAllCardReviews().size();
+
+        return (allCorrectReviews*100)/allReviews;
+    }
+
+    public String getOverallProgress(){
+        return reviewController.getCorrectReviews().size() + " / " + allFlashcards().size();
+    }
+
+    public String getTotalStudyTime(){
+        Duration studyTime = getAllSessions().stream()
+                .filter(i -> i.getStartedAt() != null && i.getEndedAt() != null)
+                .map(i -> Duration.between(i.getStartedAt(), i.getEndedAt()))
+                .reduce(Duration.ZERO, Duration::plus);
+
+        return studyTime.toHours() + "hr " + studyTime.toMinutesPart() + "m";
     }
 
     //----------------- DATA -----------------------
@@ -146,6 +196,13 @@ public class MainController {
         studyController.saveStudySessionToDB();
         reviewController.saveReviewToDB();
         System.out.println("Changes Saved to Database.");
+    }
+
+    public boolean hasUnsavedChanges() {
+        return deckController.hasPendingChanges()
+                || flashcardController.hasPendingChanges()
+                || studyController.hasPendingChanges()
+                || reviewController.hasPendingChanges();
     }
 
 }

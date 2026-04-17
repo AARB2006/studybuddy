@@ -29,6 +29,24 @@ public class FlashcardController {
         return new ArrayList<>(flashcards);
     }
 
+    public List<Flashcard> getHardFlashcards(){
+        return flashcards.stream()
+                .filter(i -> i.getDifficulty().equalsIgnoreCase("HARD"))
+                .toList();
+    }
+
+    public List<Flashcard> getMediumFlashcards(){
+        return flashcards.stream()
+                .filter(i -> i.getDifficulty().equalsIgnoreCase("MEDIUM"))
+                .toList();
+    }
+
+    public List<Flashcard> getEasyFlashcards(){
+        return flashcards.stream()
+                .filter(i -> i.getDifficulty().equalsIgnoreCase("EASY"))
+                .toList();
+    }
+
     public List<Flashcard> getFlashcardsByDeck(int deckID){
         return flashcards.stream()
                 .filter(card -> card.getDeck().getDeckID() == deckID)
@@ -109,9 +127,16 @@ public class FlashcardController {
             for(int flashcardID: deletedFlashcards){
                 flashcardDAOImpl.delete(flashcardID);
             }
+            addedFlashcards.clear();
+            modifiedFlashcards.clear();
+            deletedFlashcards.clear();
         }catch(Exception e){
             throw new CustomException("Failed to Save Flashcards");
         }
+    }
+
+    public boolean hasPendingChanges() {
+        return !addedFlashcards.isEmpty() || !modifiedFlashcards.isEmpty() || !deletedFlashcards.isEmpty();
     }
 
     void validateConstraints(Flashcard flashcard) throws CustomException{

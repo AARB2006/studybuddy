@@ -8,6 +8,7 @@ import com.studyapp.model.Flashcard;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
@@ -29,7 +30,11 @@ public class AllCardsPanel {
     }
 
     public static VBox create(BorderPane mainLayout, Deck deck) {
-        List<Flashcard> cards = createAllCards();
+        List<Flashcard> cards = deck == null
+                ? createAllCards()
+                : createAllCards().stream()
+                        .filter(card -> card.getDeck().getDeckID() == deck.getDeckID())
+                        .toList();
 
         VBox wrapper = new VBox();
         wrapper.setPadding(new Insets(20));
@@ -41,7 +46,7 @@ public class AllCardsPanel {
         mainContent.setStyle(BORDER_STYLE);
         VBox.setVgrow(mainContent, Priority.ALWAYS);
 
-        Label header = new Label("All Cards");
+        Label header = new Label(deck == null ? "All Cards" : deck.getName());
         header.setFont(Font.font("Serif", 32));
         header.setTextFill(Color.WHITE);
         header.setMaxWidth(Double.MAX_VALUE);
@@ -51,14 +56,21 @@ public class AllCardsPanel {
         HBox actionRow = new HBox(15);
         actionRow.setAlignment(Pos.CENTER_LEFT);
 
-        Label helperLabel = new Label("This is the last screen in the stripped-down flow. All cards shown here are hardcoded locally.");
+        Label helperLabel = new Label(deck == null
+                ? "This is the last screen in the stripped-down flow. All cards shown here are hardcoded locally."
+                : "Prototype card list for the selected deck.");
         helperLabel.setFont(Font.font("Serif", 15));
         helperLabel.setTextFill(Color.web("#0f766e"));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        actionRow.getChildren().addAll(helperLabel, spacer);
+        Button studyBtn = new Button("Study Disabled");
+        studyBtn.setDisable(true);
+        studyBtn.setFont(Font.font("Serif", 16));
+        studyBtn.setStyle("-fx-background-color: #f8fafc; -fx-text-fill: #94a3b8; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 30;");
+
+        actionRow.getChildren().addAll(helperLabel, spacer, studyBtn);
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
@@ -86,16 +98,20 @@ public class AllCardsPanel {
 
     private static List<Flashcard> createAllCards() {
         Deck javaDeck = createDeck(101, "Java Foundations");
-        Deck navDeck = createDeck(102, "UI Navigation");
-        Deck dbDeck = createDeck(103, "Database Concepts");
+        Deck sqlDeck = createDeck(102, "SQL Essentials");
+        Deck navDeck = createDeck(103, "UI Navigation");
+        Deck dsDeck = createDeck(104, "Data Structures");
 
         return List.of(
                 createCard(1, javaDeck, "What does JVM stand for?", "Java Virtual Machine", "Easy"),
                 createCard(2, javaDeck, "What collection keeps insertion order?", "LinkedHashMap", "Medium"),
-                createCard(3, navDeck, "Which layout is used for the main shell?", "BorderPane", "Easy"),
-                createCard(4, navDeck, "What panel opens from the Dashboard next button?", "My Cards", "Medium"),
-                createCard(5, dbDeck, "What does a LEFT JOIN keep from the first table?", "All rows from the left table", "Easy"),
-                createCard(6, dbDeck, "Why do we normalize a schema?", "To reduce redundancy and improve integrity", "Hard"));
+                createCard(3, javaDeck, "What keyword prevents inheritance?", "final", "Easy"),
+                createCard(4, sqlDeck, "What clause filters grouped rows?", "HAVING", "Medium"),
+                createCard(5, sqlDeck, "What does a LEFT JOIN keep from the first table?", "All rows from the left table", "Easy"),
+                createCard(6, navDeck, "Which layout is used for the main shell?", "BorderPane", "Easy"),
+                createCard(7, navDeck, "What panel opens from the Dashboard next button?", "My Decks", "Medium"),
+                createCard(8, dsDeck, "Which data structure uses FIFO?", "Queue", "Easy"),
+                createCard(9, dsDeck, "Which structure supports LIFO?", "Stack", "Easy"));
     }
 
     private static Deck createDeck(int id, String name) {

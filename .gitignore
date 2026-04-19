@@ -38,4 +38,6 @@ target/
 .classpath
 .project
 .settings/
-bin/.env
+bin/
+
+.env

@@ -1,5 +1,6 @@
 package com.studyapp.controller;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -11,6 +12,7 @@ import com.studyapp.model.CardReview;
 import com.studyapp.model.Deck;
 import com.studyapp.model.Flashcard;
 import com.studyapp.model.StudySession;
+import com.studyapp.service.JsonImportExportService;
 
 //HANDLES ALL OPERATIONS THAT CONNECTS BACKEND WITH FRONTEND
 //INCLUDES:
@@ -56,8 +58,8 @@ public class MainController {
 
     //------------- DMLs --------------------
     //-----DECK--------
-    public void createDeck(String deckName, String description) throws CustomException{
-        deckController.createDeck(deckName, description);
+    public Deck createDeck(String deckName, String description) throws CustomException{
+        return deckController.createDeck(deckName, description);
     }
 
     public void deleteDeck(int deckID) throws CustomException{
@@ -97,8 +99,8 @@ public class MainController {
         return flashcardController.getEasyFlashcards();
     }
 
-    public void createFlashcard(int deckID, String question, String answer, String difficulty) throws CustomException{
-        flashcardController.createFlashcard(deckID, question, answer, difficulty);
+    public Flashcard createFlashcard(int deckID, String question, String answer, String difficulty) throws CustomException{
+        return flashcardController.createFlashcard(deckID, question, answer, difficulty);
     }
 
     public void updateFlashcard(Flashcard flashcard) throws CustomException {
@@ -223,6 +225,30 @@ public class MainController {
                 || flashcardController.hasPendingChanges()
                 || studyController.hasPendingChanges()
                 || reviewController.hasPendingChanges();
+    }
+
+    public void saveImportedChanges(List<Deck> importedDecks, List<Flashcard> importedFlashcards) throws CustomException {
+        deckController.saveAddedDecks(importedDecks);
+        flashcardController.saveAddedFlashcards(importedFlashcards);
+    }
+
+    // --------- JSON IMPORT / EXPORT --------------
+    /**
+     * Imports decks and cards from a JSON file.
+     * Supports both single-deck and multi-deck JSON formats.
+     * @return number of decks imported
+     */
+    public int importFromJson(File file) throws CustomException {
+        return new JsonImportExportService().importFromFile(file, this);
+    }
+
+    /**
+     * Exports a deck and all its cards to a JSON file.
+     */
+    public void exportDeckToJson(int deckID, File file) throws CustomException {
+        Deck deck = findDeck(deckID);
+        List<Flashcard> cards = getFlashcardsByDeck(deckID);
+        new JsonImportExportService().exportDeckToFile(deck, cards, file);
     }
 
 }

@@ -384,7 +384,7 @@ public class MyDeckPanel {
 
             try {
                 mc.createDeck(deckName, description);
-                mc.saveChanges();
+                //mc.saveChanges();
                 dialog.close();
                 mainLayout.setCenter(MyDeckPanel.create(mainLayout,
                         "Deck '" + deckName + "' created successfully!", "#22c55e", mc));

@@ -2,6 +2,7 @@ package com.studyapp.view;
 
 import java.util.Optional;
 
+import com.studyapp.controller.MainController;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -29,6 +30,7 @@ public class MainFrame {
     private static Button cardsBtn;
 
     public static void show(Stage stage) {
+        MainController mc = SetupPanel.getMainController();
         BorderPane mainLayout = new BorderPane();
         mainLayout.setStyle("-fx-background-color: #f8fafc;");
 
@@ -64,17 +66,7 @@ public class MainFrame {
         exitBtn.setStyle(exitDefault);
         exitBtn.setOnMouseEntered(e -> exitBtn.setStyle(exitHover));
         exitBtn.setOnMouseExited(e -> exitBtn.setStyle(exitDefault));
-        exitBtn.setOnAction(e -> {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Exit Application");
-            alert.setHeaderText("Are you sure you want to exit?");
-            alert.setContentText("Any unsaved study progress might be lost.");
-
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                stage.close();
-            }
-        });
+        exitBtn.setOnAction(e -> handleExit(mainLayout, mc));
 
         buttonBox.getChildren().addAll(dashBtn, decksBtn, cardsBtn, spacer, exitBtn);
         sidebar.getChildren().addAll(appTitleLabel, buttonBox);
@@ -86,12 +78,12 @@ public class MainFrame {
 
         decksBtn.setOnAction(e -> {
             setActiveButton(decksBtn);
-            mainLayout.setCenter(MyDeckPanel.create(mainLayout));
+            mainLayout.setCenter(MyDeckPanel.create(mainLayout, mc));
         });
 
         cardsBtn.setOnAction(e -> {
             setActiveButton(cardsBtn);
-            mainLayout.setCenter(AllCardsPanel.create(mainLayout));
+            mainLayout.setCenter(AllCardsPanel.create(mainLayout, mc));
         });
 
         mainLayout.setLeft(sidebar);
@@ -105,6 +97,12 @@ public class MainFrame {
             existingScene.setRoot(mainLayout);
         }
         stage.setMaximized(true);
+        stage.setOnCloseRequest(event -> {
+            if (stage.getScene().getRoot() == mainLayout) {
+                event.consume();
+                handleExit(mainLayout, mc);
+            }
+        });
     }
 
     public static void activateMyDecks() {
@@ -135,4 +133,10 @@ public class MainFrame {
         cardsBtn.setStyle(INACTIVE_STYLE);
         active.setStyle(ACTIVE_STYLE);
     }
+
+    private static void handleExit(BorderPane mainLayout, MainController mc) {
+        ExitPanel.show(mainLayout, mc);
+    }
+
+
 }

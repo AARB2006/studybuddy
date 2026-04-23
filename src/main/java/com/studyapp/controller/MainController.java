@@ -1,9 +1,12 @@
 package com.studyapp.controller;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.studyapp.db.DatabaseConnection;
@@ -11,6 +14,7 @@ import com.studyapp.model.CardReview;
 import com.studyapp.model.Deck;
 import com.studyapp.model.Flashcard;
 import com.studyapp.model.StudySession;
+import com.studyapp.service.JsonImportExportService;
 
 //HANDLES ALL OPERATIONS THAT CONNECTS BACKEND WITH FRONTEND
 //INCLUDES:
@@ -56,8 +60,8 @@ public class MainController {
 
     //------------- DMLs --------------------
     //-----DECK--------
-    public void createDeck(String deckName, String description) throws CustomException{
-        deckController.createDeck(deckName, description);
+    public Deck createDeck(String deckName, String description) throws CustomException{
+        return deckController.createDeck(deckName, description);
     }
 
     public void deleteDeck(int deckID) throws CustomException{
@@ -97,8 +101,8 @@ public class MainController {
         return flashcardController.getEasyFlashcards();
     }
 
-    public void createFlashcard(int deckID, String question, String answer, String difficulty) throws CustomException{
-        flashcardController.createFlashcard(deckID, question, answer, difficulty);
+    public Flashcard createFlashcard(int deckID, String question, String answer, String difficulty) throws CustomException{
+        return flashcardController.createFlashcard(deckID, question, answer, difficulty);
     }
 
     public void updateFlashcard(Flashcard flashcard) throws CustomException {
@@ -145,14 +149,17 @@ public class MainController {
 
     //------------ STATISTICS  -------------------//
     public int getDeckProgress(int deckID){
-        List<CardReview> allReviews = studyController.getSpecificDeckSession(deckID).stream()
+        // Delegate filtering logic to the ReviewController
+        List<CardReview> deckReviews = studyController.getSpecificDeckSession(deckID).stream()
                 .flatMap(session -> getCardReviewsBySession(session.getSessionID()).stream())
-                .toList()   ;
+                .toList();
 
-
-        int correctlyReviewed = (int) allReviews.stream()
+        Set<Integer> correctCardIds = deckReviews.stream()
                 .filter(CardReview::isCorrect)
-                .count();
+                .map(review -> review.getFlashcard().getCardID())
+                .collect(Collectors.toSet());
+
+        long uniqueCorrectlyReviewed = correctCardIds.size();
 
         int total = getFlashcardsByDeck(deckID).size();
 
@@ -160,7 +167,7 @@ public class MainController {
             return 0;
         }
 
-        return (correctlyReviewed*100/total);
+        return (int) (uniqueCorrectlyReviewed * 100 / total);
     }
 
     public int getAccuracy(){
@@ -175,18 +182,27 @@ public class MainController {
     }
 
     public String getOverallProgress(){
-        return reviewController.getCorrectReviews().size() + " / " + allFlashcards().size();
+        // Simply ask the ReviewController for the latest unique state of all cards
+        Set<Integer> correctCardIds = getAllCardReviews().stream()
+                .filter(CardReview::isCorrect)
+                .map(review -> review.getFlashcard().getCardID())
+                .collect(Collectors.toSet());
+
+        long uniqueCorrect = correctCardIds.size();
+
+        return uniqueCorrect + " / " + allFlashcards().size();
     }
 
     public String getCardsReviewedProgress() {
-        return getAllCardReviews().size() + "/" + allFlashcards().size();
+        // Coverage is just the count of unique cards that have been reviewed
+        int uniqueReviewedCount = reviewController.getLatestUniqueReviews(getAllCardReviews()).size();
+        return uniqueReviewedCount + "/" + allFlashcards().size();
     }
 
     public List<Deck> getRecentDecks() {
-        return allDecks().stream()
-                .sorted(Comparator.comparing(Deck::getCreatedAt).reversed())
-                .limit(3)
-                .collect(Collectors.toList());
+        return studyController.getRecentSessions().stream()
+                .map(StudySession::getDeck)
+                .toList();
     }
 
     public String getTotalStudyTime(){
@@ -223,6 +239,30 @@ public class MainController {
                 || flashcardController.hasPendingChanges()
                 || studyController.hasPendingChanges()
                 || reviewController.hasPendingChanges();
+    }
+
+    public void saveImportedChanges(List<Deck> importedDecks, List<Flashcard> importedFlashcards) throws CustomException {
+        deckController.saveAddedDecks(importedDecks);
+        flashcardController.saveAddedFlashcards(importedFlashcards);
+    }
+
+    // --------- JSON IMPORT / EXPORT --------------
+    /**
+     * Imports decks and cards from a JSON file.
+     * Supports both single-deck and multi-deck JSON formats.
+     * @return number of decks imported
+     */
+    public int importFromJson(File file) throws CustomException {
+        return new JsonImportExportService().importFromFile(file, this);
+    }
+
+    /**
+     * Exports a deck and all its cards to a JSON file.
+     */
+    public void exportDeckToJson(int deckID, File file) throws CustomException {
+        Deck deck = findDeck(deckID);
+        List<Flashcard> cards = getFlashcardsByDeck(deckID);
+        new JsonImportExportService().exportDeckToFile(deck, cards, file);
     }
 
 }

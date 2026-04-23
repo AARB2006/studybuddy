@@ -1,16 +1,18 @@
 package com.studyapp.view;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+import com.studyapp.controller.MainController;
 import com.studyapp.model.Deck;
 import com.studyapp.model.Flashcard;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -24,17 +26,19 @@ public class AllCardsPanel {
     private static final String PRIMARY_BLUE = "#2a548f";
     private static final String HEADER_BLUE = "#41729f";
     private static final String BORDER_STYLE = "-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;";
+    private static final String DECK_ROW_STYLE = "-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-color: white; -fx-padding: 15; -fx-cursor: hand;";
+    private static final String DECK_ROW_HOVER_STYLE = "-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-color: #f8fbff; -fx-padding: 15; -fx-cursor: hand;";
+    private static final String OPEN_BUTTON_STYLE = "-fx-background-color: #e6eaf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
+    private static final String OPEN_BUTTON_HOVER_STYLE = "-fx-background-color: #d0dcf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
 
-    public static VBox create(BorderPane mainLayout) {
-        return create(mainLayout, null);
+    public static VBox create(BorderPane mainLayout, MainController mc) {
+        return create(mainLayout, null, mc);
     }
 
-    public static VBox create(BorderPane mainLayout, Deck deck) {
+    public static VBox create(BorderPane mainLayout, Deck deck, MainController mc) {
         List<Flashcard> cards = deck == null
-                ? createAllCards()
-                : createAllCards().stream()
-                        .filter(card -> card.getDeck().getDeckID() == deck.getDeckID())
-                        .toList();
+                ? mc.allFlashcards()
+                : mc.getFlashcardsByDeck(deck.getDeckID());
 
         VBox wrapper = new VBox();
         wrapper.setPadding(new Insets(20));
@@ -53,24 +57,31 @@ public class AllCardsPanel {
         header.setAlignment(Pos.CENTER);
         header.setStyle("-fx-background-color: " + HEADER_BLUE + "; -fx-background-radius: 8; -fx-padding: 10;");
 
-        HBox actionRow = new HBox(15);
-        actionRow.setAlignment(Pos.CENTER_LEFT);
+        HBox toolbar = new HBox(15);
+        toolbar.setAlignment(Pos.CENTER_LEFT);
 
-        Label helperLabel = new Label(deck == null
-                ? "This is the last screen in the stripped-down flow. All cards shown here are hardcoded locally."
-                : "Prototype card list for the selected deck.");
-        helperLabel.setFont(Font.font("Serif", 15));
-        helperLabel.setTextFill(Color.web("#0f766e"));
+        TextField searchField = new TextField();
+        searchField.setPromptText("Search decks");
+        searchField.setPrefWidth(300);
+        searchField.setStyle("-fx-border-color: black; -fx-background-color: white; -fx-border-radius: 0;");
+
+        Label searchIcon = new Label("Search");
+        searchIcon.setFont(Font.font("Serif", 14));
+        searchIcon.setTextFill(Color.web(PRIMARY_BLUE));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button studyBtn = new Button("Study Disabled");
-        studyBtn.setDisable(true);
-        studyBtn.setFont(Font.font("Serif", 16));
-        studyBtn.setStyle("-fx-background-color: #f8fafc; -fx-text-fill: #94a3b8; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 30;");
+        Label sortLabel = new Label("Sort by:");
+        sortLabel.setFont(Font.font("Serif", 16));
 
-        actionRow.getChildren().addAll(helperLabel, spacer, studyBtn);
+        ComboBox<String> sortCombo = new ComboBox<>();
+        sortCombo.getItems().addAll("Newest", "Oldest", "Question");
+        sortCombo.setValue("Newest");
+        sortCombo.setStyle("-fx-border-color: black; -fx-background-color: white; -fx-border-radius: 0;");
+        sortCombo.setPrefWidth(120);
+
+        toolbar.getChildren().addAll(searchField, searchIcon, spacer, sortLabel, sortCombo);
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
@@ -81,55 +92,37 @@ public class AllCardsPanel {
         cardsBox.setPadding(new Insets(5, 15, 5, 5));
         cardsBox.setStyle("-fx-background-color: white;");
 
-        for (Flashcard card : cards) {
-            cardsBox.getChildren().add(createCard(card));
-        }
+        updateCardList(cardsBox, cards, "", "Newest", deck, mainLayout, mc);
 
-        if (cards.isEmpty()) {
-            cardsBox.getChildren().add(new Label("No cards available yet."));
-        }
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+        updateCardList(cardsBox, cards, newValue, sortCombo.getValue(), deck, mainLayout, mc);
+        });
+
+        // Sort listener:
+        sortCombo.setOnAction(e -> {
+            updateCardList(cardsBox, cards, searchField.getText(), sortCombo.getValue(), deck, mainLayout, mc);
+        });
 
         scrollPane.setContent(cardsBox);
-        mainContent.getChildren().addAll(header, actionRow, scrollPane);
+        mainContent.getChildren().addAll(header, toolbar, scrollPane);
         wrapper.getChildren().add(mainContent);
 
         return wrapper;
     }
 
-    private static List<Flashcard> createAllCards() {
-        Deck javaDeck = createDeck(101, "Java Foundations");
-        Deck sqlDeck = createDeck(102, "SQL Essentials");
-        Deck navDeck = createDeck(103, "UI Navigation");
-        Deck dsDeck = createDeck(104, "Data Structures");
+    // ── REPLACE createCard() ──────────────────────────────────────────────────────
+// Old signature: createCard(Flashcard flashcard, BorderPane mainLayout, MainController mc)
+// New signature adds 'Deck deck' so the refresh lambda knows which list to rebuild.
 
-        return List.of(
-                createCard(1, javaDeck, "What does JVM stand for?", "Java Virtual Machine", "Easy"),
-                createCard(2, javaDeck, "What collection keeps insertion order?", "LinkedHashMap", "Medium"),
-                createCard(3, javaDeck, "What keyword prevents inheritance?", "final", "Easy"),
-                createCard(4, sqlDeck, "What clause filters grouped rows?", "HAVING", "Medium"),
-                createCard(5, sqlDeck, "What does a LEFT JOIN keep from the first table?", "All rows from the left table", "Easy"),
-                createCard(6, navDeck, "Which layout is used for the main shell?", "BorderPane", "Easy"),
-                createCard(7, navDeck, "What panel opens from the Dashboard next button?", "My Decks", "Medium"),
-                createCard(8, dsDeck, "Which data structure uses FIFO?", "Queue", "Easy"),
-                createCard(9, dsDeck, "Which structure supports LIFO?", "Stack", "Easy"));
-    }
-
-    private static Deck createDeck(int id, String name) {
-        return new Deck(id, name, "", LocalDateTime.of(2026, 4, 10, 9, 0));
-    }
-
-    private static Flashcard createCard(int cardId, Deck deck, String question, String answer, String difficulty) {
-        return new Flashcard(cardId, deck, question, answer, difficulty, LocalDateTime.of(2026, 4, 10, 9, 0));
-    }
-
-    private static VBox createCard(Flashcard flashcard) {
+    private static VBox createCard(Flashcard flashcard, Deck deck,
+                                BorderPane mainLayout, MainController mc) {
         VBox card = new VBox();
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(18));
         card.setSpacing(8);
-        card.setStyle("-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-color: white;");
-        VBox.setVgrow(card, Priority.NEVER);
+        card.setStyle(DECK_ROW_STYLE);
 
+        VBox textContainer = new VBox(5);
         Label question = new Label(flashcard.getQuestion());
         question.setFont(Font.font("Serif", 18));
         question.setTextFill(Color.BLACK);
@@ -138,13 +131,81 @@ public class AllCardsPanel {
         Label answer = new Label("Answer: " + flashcard.getAnswer());
         answer.setFont(Font.font("Serif", 15));
         answer.setTextFill(Color.web("#475569"));
-        answer.setWrapText(true);
 
         Label difficulty = new Label("Difficulty: " + flashcard.getDifficulty());
         difficulty.setFont(Font.font("Serif", 14));
         difficulty.setTextFill(Color.web(PRIMARY_BLUE));
 
-        card.getChildren().addAll(question, answer, difficulty);
+        textContainer.getChildren().addAll(question, answer, difficulty);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button selectBtn = new Button("OPEN");
+        selectBtn.setStyle(OPEN_BUTTON_STYLE);
+        selectBtn.setOnMouseEntered(e -> selectBtn.setStyle(OPEN_BUTTON_HOVER_STYLE));
+        selectBtn.setOnMouseExited(e  -> selectBtn.setStyle(OPEN_BUTTON_STYLE));
+
+        // Pass a refresh lambda: after edit/delete, rebuild AllCardsPanel from fresh mc data.
+        selectBtn.setOnAction(e -> CardDetailPanel.show(
+                mainLayout, flashcard, mc,
+                () -> mainLayout.setCenter(AllCardsPanel.create(mainLayout, deck, mc))));
+
+        HBox mainContent = new HBox();
+        mainContent.setAlignment(Pos.CENTER_LEFT);
+        mainContent.getChildren().addAll(textContainer, spacer, selectBtn);
+
+        card.getChildren().add(mainContent);
+        card.setOnMouseEntered(e -> card.setStyle(DECK_ROW_HOVER_STYLE));
+        card.setOnMouseExited(e  -> card.setStyle(DECK_ROW_STYLE));
+
         return card;
+    }
+
+    // ── REPLACE updateCardList() ──────────────────────────────────────────────────
+// Old signature lacked 'Deck deck'. Now it passes deck down to createCard().
+
+    private static void updateCardList(VBox cardsBox, List<Flashcard> flashcards,
+                                    String searchQuery, String sortOption,
+                                    Deck deck,                    // ← new
+                                    BorderPane mainLayout, MainController mc) {
+        String query = searchQuery == null ? "" : searchQuery.toLowerCase().trim();
+        List<Flashcard> filteredCards = new java.util.ArrayList<>(flashcards.stream()
+                .filter(flashcard -> {
+                    if (query.isEmpty()) return true;
+                    String question = flashcard.getQuestion().toLowerCase();
+                    String answer   = flashcard.getAnswer().toLowerCase();
+                    return question.contains(query) || answer.contains(query);
+                })
+                .toList());
+
+        switch (sortOption) {
+            case "Oldest":
+                filteredCards.sort(java.util.Comparator.comparing(Flashcard::getCreatedAt));
+                break;
+            case "Name":
+                filteredCards.sort(java.util.Comparator.comparing(
+                        Flashcard::getQuestion, String.CASE_INSENSITIVE_ORDER));
+                break;
+            case "Newest":
+            default:
+                filteredCards.sort(java.util.Comparator.comparing(
+                        Flashcard::getCreatedAt).reversed());
+                break;
+        }
+
+        cardsBox.getChildren().clear();
+        if (filteredCards.isEmpty()) {
+            Label emptyLabel = new Label("No cards found");
+            emptyLabel.setFont(Font.font("Serif", 16));
+            emptyLabel.setTextFill(Color.GRAY);
+            emptyLabel.setPadding(new Insets(20));
+            cardsBox.getChildren().add(emptyLabel);
+        } else {
+            for (Flashcard flashcard : filteredCards) {
+                cardsBox.getChildren().add(
+                        createCard(flashcard, deck, mainLayout, mc)); // ← deck passed through
+            }
+        }
     }
 }

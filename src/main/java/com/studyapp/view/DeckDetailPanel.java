@@ -38,19 +38,33 @@ public class DeckDetailPanel {
     private static final String HEADER_BLUE = "#41729f";
     private static final String BORDER_STYLE = "-fx-border-color: " + PRIMARY_BLUE
             + "; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;";
-    private static final String ACTIVE_BTN_STYLE = "-fx-background-color: #e6eaf5; -fx-text-fill: black;"
-            + " -fx-border-color: " + PRIMARY_BLUE
-            + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+    private static final String ACTIVE_STYLE = "-fx-background-color: #e6eaf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+    private static final String INACTIVE_STYLE = "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+    private static final String HOVER_STYLE = "-fx-background-color: #f0f4f8; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
 
     private static double delXOffset = 0;
     private static double delYOffset = 0;
+    private static Button activeButton = null;
 
     public static void show(BorderPane mainLayout, Deck deckData, MainController mc) {
-        show(mainLayout, deckData, mc, () -> mainLayout.setCenter(MyDeckPanel.create(mainLayout, mc)));
+        Runnable returnAction = () -> {
+            activeButton.setStyle(INACTIVE_STYLE);
+            mainLayout.setCenter(MyDeckPanel.create(mainLayout, mc));
+        };
+        show(mainLayout, deckData, mc, returnAction, mainLayout.getLeft());
     }
 
     public static void show(BorderPane mainLayout, Deck deckData, MainController mc, Runnable returnAction) {
-        render(mainLayout, deckData, mc, returnAction, false, mainLayout.getLeft());
+        show(mainLayout, deckData, mc, returnAction, mainLayout.getLeft());
+    }
+
+    public static void show(
+            BorderPane mainLayout,
+            Deck deckData,
+            MainController mc,
+            Runnable returnAction,
+            Node originalSidebar) {
+        render(mainLayout, deckData, mc, returnAction, false, originalSidebar);
     }
 
     private static void render(
@@ -101,14 +115,7 @@ public class DeckDetailPanel {
         buttonBox.setStyle(BORDER_STYLE);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
-        Button editBtn = new Button("EDIT");
-        editBtn.setMaxWidth(Double.MAX_VALUE);
-        editBtn.setFont(Font.font("Serif", 16));
-        editBtn.setStyle(ACTIVE_BTN_STYLE);
-        editBtn.setOnMouseEntered(e -> editBtn.setStyle(
-                "-fx-background-color: #d0dcf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE
-                        + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;"));
-        editBtn.setOnMouseExited(e -> editBtn.setStyle(ACTIVE_BTN_STYLE));
+        Button editBtn = createNavButton("EDIT");
         editBtn.setOnAction(e -> {
             if (!editMode) {
                 render(mainLayout, deckData, mc, returnAction, true, originalSidebar);
@@ -146,6 +153,8 @@ public class DeckDetailPanel {
         backBtn.setOnMouseExited(ev -> backBtn.setStyle(backDefault));
 
         if (editMode) {
+            editBtn.setStyle(ACTIVE_STYLE);
+            activeButton = editBtn;
             backBtn.setOnAction(ev -> render(mainLayout, deckData, mc, returnAction, false, originalSidebar));
 
             Button saveBtn = new Button("SAVE");
@@ -174,25 +183,15 @@ public class DeckDetailPanel {
                 returnAction.run();
             });
 
-            Button cardsBtn = new Button("Cards");
-            cardsBtn.setMaxWidth(Double.MAX_VALUE);
-            cardsBtn.setFont(Font.font("Serif", 16));
-            cardsBtn.setStyle(ACTIVE_BTN_STYLE);
-            cardsBtn.setOnMouseEntered(e -> cardsBtn.setStyle(
-                    "-fx-background-color: #d0dcf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE
-                            + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;"));
-            cardsBtn.setOnMouseExited(e -> cardsBtn.setStyle(ACTIVE_BTN_STYLE));
-            cardsBtn.setOnAction(e -> mainLayout.setCenter(AllCardsPanel.create(mainLayout, deckData, mc)));
+            Button cardsBtn = createNavButton("CARDS");
+            cardsBtn.setOnAction(e -> {
+                cardsBtn.setStyle(ACTIVE_STYLE);
+                activeButton = cardsBtn;
+                mainLayout.setCenter(AllCardsPanel.create(mainLayout, deckData, mc));
+            });
 
-            Button studyBtn = new Button("Study");
-            studyBtn.setMaxWidth(Double.MAX_VALUE);
-            studyBtn.setFont(Font.font("Serif", 16));
-            studyBtn.setStyle(ACTIVE_BTN_STYLE);
-            studyBtn.setOnMouseEntered(e -> studyBtn.setStyle(
-                    "-fx-background-color: #d0dcf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE
-                            + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;"));
-            studyBtn.setOnMouseExited(e -> studyBtn.setStyle(ACTIVE_BTN_STYLE));
-            studyBtn.setOnAction(e -> StudyPanel.create(mainLayout, deckData, mc));
+            Button studyBtn = createNavButton("STUDY");
+            studyBtn.setOnAction(e -> StudyPanel.create(mainLayout, deckData, mc, originalSidebar, returnAction));
 
             buttonBox.getChildren().addAll(editBtn, cardsBtn, studyBtn, spacer, deleteBtn, backBtn);
         }
@@ -311,6 +310,25 @@ public class DeckDetailPanel {
         lbl.setFont(Font.font("Serif", 14));
         return lbl;
     }
+
+    private static Button createNavButton(String text) {
+        Button btn = new Button(text);
+        btn.setMaxWidth(Double.MAX_VALUE);
+        btn.setFont(Font.font("Serif", 16));
+        btn.setStyle(INACTIVE_STYLE);
+        btn.setOnMouseEntered(e -> {
+            if (!btn.getStyle().equals(ACTIVE_STYLE)) {
+                btn.setStyle(HOVER_STYLE);
+            }
+        });
+        btn.setOnMouseExited(e -> {
+            if (!btn.getStyle().equals(ACTIVE_STYLE)) {
+                btn.setStyle(INACTIVE_STYLE);
+            }
+        });
+        return btn;
+    }
+
 
     private static void showDeleteDeckDialog(
             BorderPane mainLayout,

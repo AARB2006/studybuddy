@@ -37,7 +37,8 @@ public class StudyPanel {
     private final MainController mc;
     private final Deck deckData;
     private final BorderPane mainLayout;
-    private final Node savedSidebar;
+    private final Node originalSidebar;
+    private final Runnable returnAction;
 
     private List<Flashcard> flashcards;
     private StudySession studySession;
@@ -54,14 +55,35 @@ public class StudyPanel {
 
     // ── entry point ───────────────────────────────────────────────────────────
     public static void create(BorderPane mainLayout, Deck deckData, MainController mc) {
-        new StudyPanel(mainLayout, deckData, mc).init();
+        new StudyPanel(
+                mainLayout,
+                deckData,
+                mc,
+                mainLayout.getLeft(),
+                () -> mainLayout.setCenter(MyDeckPanel.create(mainLayout, mc)))
+                .init();
     }
 
-    private StudyPanel(BorderPane mainLayout, Deck deckData, MainController mc) {
+    public static void create(
+            BorderPane mainLayout,
+            Deck deckData,
+            MainController mc,
+            Node originalSidebar,
+            Runnable returnAction) {
+        new StudyPanel(mainLayout, deckData, mc, originalSidebar, returnAction).init();
+    }
+
+    private StudyPanel(
+            BorderPane mainLayout,
+            Deck deckData,
+            MainController mc,
+            Node originalSidebar,
+            Runnable returnAction) {
         this.mainLayout   = mainLayout;
         this.deckData     = deckData;
         this.mc           = mc;
-        this.savedSidebar = mainLayout.getLeft();
+        this.originalSidebar = originalSidebar;
+        this.returnAction = returnAction;
     }
 
     private void init() {
@@ -172,8 +194,7 @@ public class StudyPanel {
     }
 
     private void returnToDeckDetail() {
-        mainLayout.setLeft(savedSidebar);
-        DeckDetailPanel.show(mainLayout, deckData, mc);
+        DeckDetailPanel.show(mainLayout, deckData, mc, returnAction, originalSidebar);
     }
 
     // ── score refresh (sidebar stays mounted, just mutate the labels) ─────────

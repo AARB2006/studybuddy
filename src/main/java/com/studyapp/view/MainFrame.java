@@ -30,8 +30,7 @@ public class MainFrame {
     private static double Xoffset = 0;
     private static double Yoffset = 0;
 
-    public static void show(Stage stage) {
-        MainController mc = SetupPanel.getMainController();
+    public static void show(Stage stage, MainController mc) {
         BorderPane mainLayout = new BorderPane();
         mainLayout.setStyle("-fx-background-color: #f8fafc;");
 
@@ -74,7 +73,7 @@ public class MainFrame {
 
         dashBtn.setOnAction(e -> {
             setActiveButton(dashBtn);
-            mainLayout.setCenter(DashboardPanel.create(mainLayout));
+            mainLayout.setCenter(DashboardPanel.create(mainLayout, mc));
         });
 
         decksBtn.setOnAction(e -> {
@@ -88,7 +87,7 @@ public class MainFrame {
         });
 
         mainLayout.setLeft(sidebar);
-        mainLayout.setCenter(DashboardPanel.create(mainLayout));
+        mainLayout.setCenter(DashboardPanel.create(mainLayout, mc));
         setActiveButton(dashBtn);
 
         Scene existingScene = stage.getScene();
@@ -97,17 +96,85 @@ public class MainFrame {
         } else {
             existingScene.setRoot(mainLayout);
         }
-        stage.setMaximized(true);
         stage.setOnCloseRequest(event -> {
             if (stage.getScene().getRoot() == mainLayout) {
                 event.consume();
                 handleExit(mainLayout, mc);
             }
         });
+        stage.show();
+        stage.setMaximized(true);
     }
 
-    public static void activateMyDecks() {
-        setActiveButton(decksBtn);
+    public static void showPrebuilt(Stage stage, BorderPane mainLayout) {
+        Scene existing = stage.getScene();
+        if (existing == null) {
+            stage.setScene(new Scene(mainLayout, 1024, 768));
+        } else {
+            existing.setRoot(mainLayout);
+        }
+        stage.show();
+        stage.setMaximized(true);
+    }
+
+    public static void buildInto(BorderPane mainLayout, MainController mc) {
+        mainLayout.setStyle("-fx-background-color: #f8fafc;");
+
+        VBox sidebar = new VBox(15);
+        sidebar.setPadding(new Insets(20, 20, 20, 20));
+        sidebar.setPrefWidth(250);
+        sidebar.setMinWidth(250);
+        sidebar.setMaxWidth(250);
+        sidebar.setStyle("-fx-background-color: transparent;");
+
+        Label appTitleLabel = new Label("Study Assistant\nApplication");
+        appTitleLabel.setFont(Font.font("Serif", 18));
+        appTitleLabel.setTextFill(Color.web(PRIMARY_BLUE));
+        VBox.setMargin(appTitleLabel, new Insets(0, 0, 10, 0));
+
+        VBox buttonBox = new VBox(15);
+        buttonBox.setPadding(new Insets(20));
+        buttonBox.setStyle(BORDER_STYLE);
+        VBox.setVgrow(buttonBox, Priority.ALWAYS);
+
+        dashBtn = createNavButton("Dashboard");
+        decksBtn = createNavButton("My Decks");
+        cardsBtn = createNavButton("All Cards");
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        Button exitBtn = new Button("EXIT");
+        exitBtn.setMaxWidth(Double.MAX_VALUE);
+        exitBtn.setFont(Font.font("Serif", 16));
+        String exitDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+        String exitHover = "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+        exitBtn.setStyle(exitDefault);
+        exitBtn.setOnMouseEntered(e -> exitBtn.setStyle(exitHover));
+        exitBtn.setOnMouseExited(e -> exitBtn.setStyle(exitDefault));
+        exitBtn.setOnAction(e -> handleExit(mainLayout, mc));
+
+        buttonBox.getChildren().addAll(dashBtn, decksBtn, cardsBtn, spacer, exitBtn);
+        sidebar.getChildren().addAll(appTitleLabel, buttonBox);
+
+        dashBtn.setOnAction(e -> {
+            setActiveButton(dashBtn);
+            mainLayout.setCenter(DashboardPanel.create(mainLayout, mc));
+        });
+
+        decksBtn.setOnAction(e -> {
+            setActiveButton(decksBtn);
+            mainLayout.setCenter(MyDeckPanel.create(mainLayout, mc));
+        });
+
+        cardsBtn.setOnAction(e -> {
+            setActiveButton(cardsBtn);
+            mainLayout.setCenter(AllCardsPanel.create(mainLayout, mc));
+        });
+
+        mainLayout.setLeft(sidebar);
+        mainLayout.setCenter(DashboardPanel.create(mainLayout, mc));
+        setActiveButton(dashBtn);
     }
 
     private static Button createNavButton(String text) {

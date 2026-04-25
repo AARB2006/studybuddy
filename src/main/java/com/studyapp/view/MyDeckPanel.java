@@ -44,6 +44,9 @@ public class MyDeckPanel {
     private static final String OPEN_BUTTON_STYLE = "-fx-background-color: #e6eaf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
     private static final String OPEN_BUTTON_HOVER_STYLE = "-fx-background-color: #d0dcf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
 
+    // ── NEW: page size constant ──────────────────────────────────────────────
+    private static final int PAGE_SIZE = 5;
+
     public static VBox create(BorderPane mainLayout, MainController mc) {
         return create(mainLayout, "Manage decks, or import/export your deck data as JSON.", PRIMARY_BLUE, mc);
     }
@@ -75,12 +78,8 @@ public class MyDeckPanel {
         Button importBtn = createToolbarButton("Import");
         Button exportBtn = createToolbarButton("Export");
 
-        // NEW DECK button handler - shows custom dialog matching storyboard
-        newBtn.setOnAction(e -> {
-            showCreateDeckDialog(mainLayout, mc);
-        });
+        newBtn.setOnAction(e -> showCreateDeckDialog(mainLayout, mc));
 
-        // IMPORT button handler
         importBtn.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             fc.setTitle("Import Decks from JSON");
@@ -113,11 +112,9 @@ public class MyDeckPanel {
             }
         });
 
-        // EXPORT button handler
         exportBtn.setOnAction(e -> {
             List<Deck> allDecks = mc.allDecks();
             if (!allDecks.isEmpty()) {
-
                 ChoiceDialog<String> deckPicker = new ChoiceDialog<>(
                         allDecks.get(0).getName(),
                         allDecks.stream().map(Deck::getName).toList()
@@ -158,10 +155,9 @@ public class MyDeckPanel {
                         }
                     }
                 }
-            }else{
+            } else {
                 MainFrame.showErrorDialog("No decks to export. Please add decks before exporting.");
             }
-
         });
 
         TextField searchField = new TextField();
@@ -201,16 +197,21 @@ public class MyDeckPanel {
         deckList.setPadding(new Insets(5, 15, 5, 5));
         deckList.setStyle("-fx-background-color: white;");
 
-        updateDeckList(deckList, decks, "", "Newest", mainLayout, mc);
+        // ── NEW: shared mutable page tracker ────────────────────────────────
+        int[] currentPage = {0};
 
-        // Search functionality - filter as user types
+        updateDeckList(deckList, decks, "", "Newest", currentPage[0], mainLayout, mc);
+
+        // Search listener — reset to page 0 on new query
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            updateDeckList(deckList, decks, newValue, sortCombo.getValue(), mainLayout, mc);
+            currentPage[0] = 0;
+            updateDeckList(deckList, decks, newValue, sortCombo.getValue(), currentPage[0], mainLayout, mc);
         });
 
-        // Sort functionality - re-sort when dropdown changes
+        // Sort listener — reset to page 0 on new sort
         sortCombo.setOnAction(e -> {
-            updateDeckList(deckList, decks, searchField.getText(), sortCombo.getValue(), mainLayout, mc);
+            currentPage[0] = 0;
+            updateDeckList(deckList, decks, searchField.getText(), sortCombo.getValue(), currentPage[0], mainLayout, mc);
         });
 
         scrollPane.setContent(deckList);
@@ -220,10 +221,12 @@ public class MyDeckPanel {
         return wrapper;
     }
 
+    // ── UPDATED: added pageIndex param; builds deck slice + pagination bar ──
     private static void updateDeckList(VBox deckList, List<Deck> allDecks, String searchQuery,
-                                       String sortOption, BorderPane mainLayout, MainController mc) {
-        // Filter decks by search query
+                                       String sortOption, int pageIndex,
+                                       BorderPane mainLayout, MainController mc) {
         String query = searchQuery == null ? "" : searchQuery.toLowerCase().trim();
+
         List<Deck> filteredDecks = allDecks.stream()
                 .filter(deck -> {
                     if (query.isEmpty()) return true;
@@ -233,7 +236,6 @@ public class MyDeckPanel {
                 })
                 .collect(java.util.stream.Collectors.toList());
 
-        // Sort the filtered decks
         switch (sortOption) {
             case "Oldest":
                 filteredDecks.sort(java.util.Comparator.comparing(Deck::getDeckID));
@@ -247,20 +249,65 @@ public class MyDeckPanel {
                 break;
         }
 
-        // Clear and repopulate the deck list
         deckList.getChildren().clear();
+
         if (filteredDecks.isEmpty()) {
             Label emptyLabel = new Label("No decks found");
             emptyLabel.setFont(Font.font("Serif", 16));
             emptyLabel.setTextFill(Color.GRAY);
             emptyLabel.setPadding(new Insets(20));
             deckList.getChildren().add(emptyLabel);
-        } else {
-            for (Deck deck : filteredDecks) {
-                deckList.getChildren().add(createDeckItem(deck, mainLayout, mc));
-            }
+            return;
         }
+
+        // ── Slice to current page ────────────────────────────────────────────
+        int totalPages = (int) Math.ceil((double) filteredDecks.size() / PAGE_SIZE);
+        int safePage   = Math.max(0, Math.min(pageIndex, totalPages - 1));
+        int fromIndex  = safePage * PAGE_SIZE;
+        int toIndex    = Math.min(fromIndex + PAGE_SIZE, filteredDecks.size());
+
+        List<Deck> pageDecks = filteredDecks.subList(fromIndex, toIndex);
+        for (Deck deck : pageDecks) {
+            deckList.getChildren().add(createDeckItem(deck, mainLayout, mc));
+        }
+
+        // ── Pagination bar ───────────────────────────────────────────────────
+        HBox pagination = new HBox(10);
+        pagination.setAlignment(Pos.CENTER);
+        pagination.setPadding(new Insets(10, 0, 5, 0));
+
+        Button prevBtn = new Button("← Prev");
+        prevBtn.setStyle(OPEN_BUTTON_STYLE);
+        prevBtn.setDisable(safePage == 0);
+        prevBtn.setOnMouseEntered(e -> { if (!prevBtn.isDisabled()) prevBtn.setStyle(OPEN_BUTTON_HOVER_STYLE); });
+        prevBtn.setOnMouseExited(e  -> { if (!prevBtn.isDisabled()) prevBtn.setStyle(OPEN_BUTTON_STYLE); });
+
+        Label pageLabel = new Label("Page " + (safePage + 1) + " of " + totalPages);
+        pageLabel.setFont(Font.font("Serif", 14));
+        pageLabel.setTextFill(Color.web(PRIMARY_BLUE));
+
+        Button nextBtn = new Button("Next →");
+        nextBtn.setStyle(OPEN_BUTTON_STYLE);
+        nextBtn.setDisable(safePage >= totalPages - 1);
+        nextBtn.setOnMouseEntered(e -> { if (!nextBtn.isDisabled()) nextBtn.setStyle(OPEN_BUTTON_HOVER_STYLE); });
+        nextBtn.setOnMouseExited(e  -> { if (!nextBtn.isDisabled()) nextBtn.setStyle(OPEN_BUTTON_STYLE); });
+
+        int[] pageRef = {safePage};
+
+        prevBtn.setOnAction(e -> {
+            pageRef[0]--;
+            updateDeckList(deckList, allDecks, searchQuery, sortOption, pageRef[0], mainLayout, mc);
+        });
+        nextBtn.setOnAction(e -> {
+            pageRef[0]++;
+            updateDeckList(deckList, allDecks, searchQuery, sortOption, pageRef[0], mainLayout, mc);
+        });
+
+        pagination.getChildren().addAll(prevBtn, pageLabel, nextBtn);
+        deckList.getChildren().add(pagination);
     }
+
+    // ── Everything below is unchanged ────────────────────────────────────────
 
     private static Button createToolbarButton(String text) {
         Button button = new Button(text);
@@ -314,18 +361,15 @@ public class MyDeckPanel {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Create Deck");
 
-        // Main container with card styling
         VBox container = new VBox(20);
         container.setPadding(new Insets(30, 40, 30, 40));
         container.setAlignment(Pos.TOP_LEFT);
         container.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-border-radius: 15;");
 
-        // Title
         Label title = new Label("Create Deck");
         title.setFont(Font.font("Serif", 36));
         title.setTextFill(Color.web("#2a548f"));
 
-        // Deck Name section
         Label nameLabel = new Label("Enter Deck Name");
         nameLabel.setFont(Font.font("Serif", 16));
         nameLabel.setTextFill(Color.web("#2a548f"));
@@ -336,7 +380,6 @@ public class MyDeckPanel {
         nameField.setStyle("-fx-border-color: #2a548f; -fx-border-width: 2; -fx-border-radius: 5; " +
                 "-fx-background-radius: 5; -fx-font-size: 14; -fx-padding: 5 10;");
 
-        // Description section
         Label descLabel = new Label("Enter Description");
         descLabel.setFont(Font.font("Serif", 16));
         descLabel.setTextFill(Color.web("#2a548f"));
@@ -350,7 +393,6 @@ public class MyDeckPanel {
                 "-fx-control-inner-background: white; -fx-background-radius: 5; " +
                 "-fx-font-size: 14; -fx-padding: 5;");
 
-        // Create button
         Button createBtn = new Button("CREATE");
         createBtn.setPrefWidth(250);
         createBtn.setPrefHeight(45);
@@ -380,7 +422,6 @@ public class MyDeckPanel {
             }
         });
 
-        // Center the button
         HBox buttonBox = new HBox(createBtn);
         buttonBox.setAlignment(Pos.CENTER);
 

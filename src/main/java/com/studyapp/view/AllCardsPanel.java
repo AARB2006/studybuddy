@@ -34,6 +34,9 @@ public class AllCardsPanel {
     private static final String OPEN_BUTTON_STYLE = "-fx-background-color: #e6eaf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
     private static final String OPEN_BUTTON_HOVER_STYLE = "-fx-background-color: #d0dcf5; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: black; -fx-padding: 8 20; -fx-cursor: hand;";
 
+    // ── NEW: page size constant ──────────────────────────────────────────────
+    private static final int PAGE_SIZE = 5;
+
     private static double Xoffset = 0;
     private static double Yoffset = 0;
 
@@ -107,15 +110,21 @@ public class AllCardsPanel {
         cardsBox.setPadding(new Insets(5, 15, 5, 5));
         cardsBox.setStyle("-fx-background-color: white;");
 
-        updateCardList(cardsBox, cards, "", "Newest", deck, mainLayout, mc);
+        // ── NEW: single mutable page tracker shared across all listeners ─────
+        int[] currentPage = {0};
 
+        updateCardList(cardsBox, cards, "", "Newest", currentPage[0], deck, mainLayout, mc);
+
+        // Search listener — reset to page 0 on new query
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-        updateCardList(cardsBox, cards, newValue, sortCombo.getValue(), deck, mainLayout, mc);
+            currentPage[0] = 0;
+            updateCardList(cardsBox, cards, newValue, sortCombo.getValue(), currentPage[0], deck, mainLayout, mc);
         });
 
-        // Sort listener:
+        // Sort listener — reset to page 0 on new sort
         sortCombo.setOnAction(e -> {
-            updateCardList(cardsBox, cards, searchField.getText(), sortCombo.getValue(), deck, mainLayout, mc);
+            currentPage[0] = 0;
+            updateCardList(cardsBox, cards, searchField.getText(), sortCombo.getValue(), currentPage[0], deck, mainLayout, mc);
         });
 
         scrollPane.setContent(cardsBox);
@@ -124,6 +133,99 @@ public class AllCardsPanel {
 
         return wrapper;
     }
+
+    // ── UPDATED: added pageIndex param; builds card slice + pagination bar ──
+    private static void updateCardList(VBox cardsBox, List<Flashcard> flashcards,
+                                       String searchQuery, String sortOption,
+                                       int pageIndex,
+                                       Deck deck,
+                                       BorderPane mainLayout, MainController mc) {
+        String query = searchQuery == null ? "" : searchQuery.toLowerCase().trim();
+
+        List<Flashcard> filteredCards = new java.util.ArrayList<>(flashcards.stream()
+                .filter(flashcard -> {
+                    if (query.isEmpty()) return true;
+                    String question = flashcard.getQuestion().toLowerCase();
+                    String answer   = flashcard.getAnswer().toLowerCase();
+                    return question.contains(query) || answer.contains(query);
+                })
+                .toList());
+
+        switch (sortOption) {
+            case "Oldest":
+                filteredCards.sort(java.util.Comparator.comparing(Flashcard::getCreatedAt));
+                break;
+            case "Question":
+                filteredCards.sort(java.util.Comparator.comparing(
+                        Flashcard::getQuestion, String.CASE_INSENSITIVE_ORDER));
+                break;
+            case "Newest":
+            default:
+                filteredCards.sort(java.util.Comparator.comparing(
+                        Flashcard::getCreatedAt).reversed());
+                break;
+        }
+
+        cardsBox.getChildren().clear();
+
+        if (filteredCards.isEmpty()) {
+            Label emptyLabel = new Label("No cards found");
+            emptyLabel.setFont(Font.font("Serif", 16));
+            emptyLabel.setTextFill(Color.GRAY);
+            emptyLabel.setPadding(new Insets(20));
+            cardsBox.getChildren().add(emptyLabel);
+            return;
+        }
+
+        // ── Slice to current page ────────────────────────────────────────────
+        int totalPages = (int) Math.ceil((double) filteredCards.size() / PAGE_SIZE);
+        int safePage   = Math.max(0, Math.min(pageIndex, totalPages - 1));
+        int fromIndex  = safePage * PAGE_SIZE;
+        int toIndex    = Math.min(fromIndex + PAGE_SIZE, filteredCards.size());
+
+        List<Flashcard> pageCards = filteredCards.subList(fromIndex, toIndex);
+        for (Flashcard flashcard : pageCards) {
+            cardsBox.getChildren().add(createCard(flashcard, deck, mainLayout, mc));
+        }
+
+        // ── Pagination bar ───────────────────────────────────────────────────
+        HBox pagination = new HBox(10);
+        pagination.setAlignment(Pos.CENTER);
+        pagination.setPadding(new Insets(10, 0, 5, 0));
+
+        Button prevBtn = new Button("← Prev");
+        prevBtn.setStyle(OPEN_BUTTON_STYLE);
+        prevBtn.setDisable(safePage == 0);
+        prevBtn.setOnMouseEntered(e -> { if (!prevBtn.isDisabled()) prevBtn.setStyle(OPEN_BUTTON_HOVER_STYLE); });
+        prevBtn.setOnMouseExited(e  -> { if (!prevBtn.isDisabled()) prevBtn.setStyle(OPEN_BUTTON_STYLE); });
+
+        Label pageLabel = new Label("Page " + (safePage + 1) + " of " + totalPages);
+        pageLabel.setFont(Font.font("Serif", 14));
+        pageLabel.setTextFill(Color.web(PRIMARY_BLUE));
+
+        Button nextBtn = new Button("Next →");
+        nextBtn.setStyle(OPEN_BUTTON_STYLE);
+        nextBtn.setDisable(safePage >= totalPages - 1);
+        nextBtn.setOnMouseEntered(e -> { if (!nextBtn.isDisabled()) nextBtn.setStyle(OPEN_BUTTON_HOVER_STYLE); });
+        nextBtn.setOnMouseExited(e  -> { if (!nextBtn.isDisabled()) nextBtn.setStyle(OPEN_BUTTON_STYLE); });
+
+        // Use an array so lambdas can mutate the page index
+        int[] pageRef = {safePage};
+
+        prevBtn.setOnAction(e -> {
+            pageRef[0]--;
+            updateCardList(cardsBox, flashcards, searchQuery, sortOption, pageRef[0], deck, mainLayout, mc);
+        });
+        nextBtn.setOnAction(e -> {
+            pageRef[0]++;
+            updateCardList(cardsBox, flashcards, searchQuery, sortOption, pageRef[0], deck, mainLayout, mc);
+        });
+
+        pagination.getChildren().addAll(prevBtn, pageLabel, nextBtn);
+        cardsBox.getChildren().add(pagination);
+    }
+
+    // ── Everything below is unchanged ────────────────────────────────────────
 
     private static void showCreateCardDialog(BorderPane mainLayout, Deck currentDeck, MainController mc) {
         Stage dialog = new Stage();
@@ -278,7 +380,7 @@ public class AllCardsPanel {
     }
 
     private static VBox createCard(Flashcard flashcard, Deck deck,
-                                BorderPane mainLayout, MainController mc) {
+                                   BorderPane mainLayout, MainController mc) {
         VBox card = new VBox();
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(18));
@@ -309,7 +411,6 @@ public class AllCardsPanel {
         selectBtn.setOnMouseEntered(e -> selectBtn.setStyle(OPEN_BUTTON_HOVER_STYLE));
         selectBtn.setOnMouseExited(e  -> selectBtn.setStyle(OPEN_BUTTON_STYLE));
 
-        // Pass a refresh lambda: after edit/delete, rebuild AllCardsPanel from fresh mc data.
         selectBtn.setOnAction(e -> CardDetailPanel.show(
                 mainLayout, flashcard, mc,
                 () -> mainLayout.setCenter(AllCardsPanel.create(mainLayout, deck, mc))));
@@ -323,50 +424,5 @@ public class AllCardsPanel {
         card.setOnMouseExited(e  -> card.setStyle(DECK_ROW_STYLE));
 
         return card;
-    }
-
-
-    private static void updateCardList(VBox cardsBox, List<Flashcard> flashcards,
-                                    String searchQuery, String sortOption,
-                                    Deck deck,                    // ← new
-                                    BorderPane mainLayout, MainController mc) {
-        String query = searchQuery == null ? "" : searchQuery.toLowerCase().trim();
-        List<Flashcard> filteredCards = new java.util.ArrayList<>(flashcards.stream()
-                .filter(flashcard -> {
-                    if (query.isEmpty()) return true;
-                    String question = flashcard.getQuestion().toLowerCase();
-                    String answer   = flashcard.getAnswer().toLowerCase();
-                    return question.contains(query) || answer.contains(query);
-                })
-                .toList());
-
-        switch (sortOption) {
-            case "Oldest":
-                filteredCards.sort(java.util.Comparator.comparing(Flashcard::getCreatedAt));
-                break;
-            case "Question":
-                filteredCards.sort(java.util.Comparator.comparing(
-                        Flashcard::getQuestion, String.CASE_INSENSITIVE_ORDER));
-                break;
-            case "Newest":
-            default:
-                filteredCards.sort(java.util.Comparator.comparing(
-                        Flashcard::getCreatedAt).reversed());
-                break;
-        }
-
-        cardsBox.getChildren().clear();
-        if (filteredCards.isEmpty()) {
-            Label emptyLabel = new Label("No cards found");
-            emptyLabel.setFont(Font.font("Serif", 16));
-            emptyLabel.setTextFill(Color.GRAY);
-            emptyLabel.setPadding(new Insets(20));
-            cardsBox.getChildren().add(emptyLabel);
-        } else {
-            for (Flashcard flashcard : filteredCards) {
-                cardsBox.getChildren().add(
-                        createCard(flashcard, deck, mainLayout, mc)); // ← deck passed through
-            }
-        }
     }
 }

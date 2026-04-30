@@ -321,54 +321,63 @@ public class MyDeckPanel {
     private static void showCreateDeckDialog(BorderPane mainLayout, MainController mc) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initStyle(StageStyle.TRANSPARENT);
         dialog.setTitle("Create Deck");
 
-        VBox container = new VBox(20);
-        container.setPadding(new Insets(30, 40, 30, 40));
+        VBox container = new VBox(12);
+        container.setPadding(new Insets(0, 40, 40, 40));
         container.setAlignment(Pos.TOP_LEFT);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-border-radius: 15;");
+        container.setStyle("-fx-border-color: #2a548f; -fx-border-radius: 12; -fx-background-radius: 10; -fx-background-color: #f8fafc;");
+
+        container.setOnMousePressed(event -> {
+            Xoffset = event.getSceneX();
+            Yoffset = event.getSceneY();
+        });
+
+        container.setOnMouseDragged(event -> {
+            Stage stage = (Stage) container.getScene().getWindow();
+            stage.setX(event.getScreenX() - Xoffset);
+            stage.setY(event.getScreenY() - Yoffset);
+        });
+
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.TOP_RIGHT);
+
+        Button closeBtn = new Button("X");
+        String xBarNormal = "-fx-background-color: transparent; -fx-text-fill: #1A438E; -fx-font-size: 18; -fx-cursor: hand;";
+        String xBarHover = "-fx-background-color: transparent; -fx-text-fill: red; -fx-font-size: 18; -fx-cursor: hand; -fx-background-radius: 0 10 0 0;";
+        closeBtn.setStyle(xBarNormal);
+        closeBtn.setOnAction(e -> dialog.close());
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle(xBarHover));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle(xBarNormal));
+        topBar.getChildren().add(closeBtn);
+        VBox.setMargin(topBar, new Insets(5, -30, 0, 0));
 
         Label title = new Label("Create Deck");
-        title.setFont(Font.font("Serif", 36));
-        title.setTextFill(Color.web("#2a548f"));
+        title.setFont(Font.font("Serif", 38));
+        title.setTextFill(Color.web(PRIMARY_BLUE));
 
         Label nameLabel = new Label("Enter Deck Name");
-        nameLabel.setFont(Font.font("Serif", 16));
-        nameLabel.setTextFill(Color.web("#2a548f"));
+        nameLabel.setFont(Font.font("Serif", 17));
+        nameLabel.setTextFill(Color.web(PRIMARY_BLUE));
 
         TextField nameField = new TextField();
         nameField.setPromptText("Deck name");
         nameField.setPrefHeight(40);
-        nameField.setStyle("-fx-border-color: #2a548f; -fx-border-width: 2; -fx-border-radius: 5; " +
-                "-fx-background-radius: 5; -fx-font-size: 14; -fx-padding: 5 10;");
+        nameField.setStyle("-fx-background-color: white; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-width: 2; -fx-border-radius: 4; -fx-background-radius: 4; -fx-font-family: Serif; -fx-font-size: 14; -fx-padding: 5 10;");
 
         Label descLabel = new Label("Enter Description");
-        descLabel.setFont(Font.font("Serif", 16));
-        descLabel.setTextFill(Color.web("#2a548f"));
+        descLabel.setFont(Font.font("Serif", 17));
+        descLabel.setTextFill(Color.web(PRIMARY_BLUE));
 
         TextArea descArea = new TextArea();
         descArea.setPromptText("Description (optional)");
-        descArea.setPrefRowCount(6);
-        descArea.setPrefHeight(150);
+        descArea.setPrefRowCount(5);
+        descArea.setPrefHeight(140);
         descArea.setWrapText(true);
-        descArea.setStyle("-fx-border-color: #2a548f; -fx-border-width: 2; -fx-border-radius: 5; " +
-                "-fx-control-inner-background: white; -fx-background-radius: 5; " +
-                "-fx-font-size: 14; -fx-padding: 5;");
+        descArea.setStyle("-fx-control-inner-background: white; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-family: Serif; -fx-font-size: 16; -fx-padding: 8;");
 
-        Button createBtn = new Button("CREATE");
-        createBtn.setPrefWidth(250);
-        createBtn.setPrefHeight(45);
-        createBtn.setStyle("-fx-background-color: #c5cae9; -fx-text-fill: #2a548f; " +
-                "-fx-font-size: 16; -fx-font-weight: bold; -fx-background-radius: 25; " +
-                "-fx-cursor: hand;");
-        createBtn.setOnMouseEntered(e ->
-                createBtn.setStyle("-fx-background-color: #b3b9e0; -fx-text-fill: #2a548f; " +
-                        "-fx-font-size: 16; -fx-font-weight: bold; -fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"));
-        createBtn.setOnMouseExited(e ->
-                createBtn.setStyle("-fx-background-color: #c5cae9; -fx-text-fill: #2a548f; " +
-                        "-fx-font-size: 16; -fx-font-weight: bold; -fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"));
+        Button createBtn = createDialogActionButton("CREATE");
 
         createBtn.setOnAction(e -> {
             String deckName = nameField.getText().trim();
@@ -386,14 +395,18 @@ public class MyDeckPanel {
 
         HBox buttonBox = new HBox(createBtn);
         buttonBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(title, new Insets(0, 0, 14, 0));
+        VBox.setMargin(nameField, new Insets(0, 0, 8, 0));
+        VBox.setMargin(descArea, new Insets(0, 0, 8, 0));
+        VBox.setMargin(buttonBox, new Insets(18, 0, 0, 0));
 
-        container.getChildren().addAll(title, nameLabel, nameField, descLabel, descArea, buttonBox);
+        container.getChildren().addAll(topBar, title, nameLabel, nameField, descLabel, descArea, buttonBox);
 
-        Scene scene = new Scene(container, 400, 550);
+        Scene scene = new Scene(container, 360, 540);
         scene.setFill(Color.TRANSPARENT);
         dialog.setScene(scene);
         dialog.setResizable(false);
-        dialog.show();
+        dialog.showAndWait();
     }
 
     private static void showExportDeckDialog(BorderPane mainLayout, MainController mc, List<Deck> allDecks) {

@@ -7,7 +7,6 @@ import java.util.Optional;
 import com.studyapp.controller.CustomException;
 import com.studyapp.controller.MainController;
 import com.studyapp.model.Deck;
-import com.studyapp.model.Flashcard;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -15,8 +14,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -115,31 +115,55 @@ public class MyDeckPanel {
         exportBtn.setOnAction(e -> {
             List<Deck> allDecks = mc.allDecks();
             if (!allDecks.isEmpty()) {
-                ChoiceDialog<String> deckPicker = new ChoiceDialog<>(
-                        allDecks.get(0).getName(),
-                        allDecks.stream().map(Deck::getName).toList()
-                );
-                deckPicker.setTitle("Export Deck");
-                deckPicker.setHeaderText("Select deck to export");
-                deckPicker.setContentText("Choose deck:");
+                // Combined dialog: deck picker + format picker in one popup
+                Dialog<ButtonType> dialog = new Dialog<>();
+                dialog.setTitle("Export Deck");
+                dialog.setHeaderText("Select deck to export");
+                dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-                Optional<String> deckChoice = deckPicker.showAndWait();
-                if (deckChoice.isPresent()) {
+                ComboBox<String> deckCombo = new ComboBox<>();
+                deckCombo.getItems().addAll(allDecks.stream().map(Deck::getName).toList());
+                deckCombo.setValue(allDecks.get(0).getName());
+                deckCombo.setMaxWidth(Double.MAX_VALUE);
+
+                ComboBox<String> formatCombo = new ComboBox<>();
+                formatCombo.getItems().addAll("JSON", "CSV");
+                formatCombo.setValue("JSON");
+                formatCombo.setMaxWidth(Double.MAX_VALUE);
+
+                VBox content = new VBox(8,
+                        new Label("Choose deck:"), deckCombo,
+                        new Label("File type:"),   formatCombo);
+                content.setPadding(new Insets(10, 10, 0, 10));
+                dialog.getDialogPane().setContent(content);
+
+                Optional<ButtonType> result = dialog.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    String format = formatCombo.getValue();
                     Deck selectedDeck = allDecks.stream()
-                            .filter(d -> d.getName().equals(deckChoice.get()))
-                            .findFirst()
-                            .orElse(null);
+                            .filter(d -> d.getName().equals(deckCombo.getValue()))
+                            .findFirst().orElse(null);
 
                     if (selectedDeck != null) {
                         FileChooser fc = new FileChooser();
-                        fc.setTitle("Save Deck as JSON");
-                        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
-                        fc.setInitialFileName(selectedDeck.getName() + ".json");
-                        File file = fc.showSaveDialog(mainLayout.getScene().getWindow());
+                        if (format.equals("CSV")) {
+                            fc.setTitle("Save Deck as CSV");
+                            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+                            fc.setInitialFileName(selectedDeck.getName() + ".csv");
+                        } else {
+                            fc.setTitle("Save Deck as JSON");
+                            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+                            fc.setInitialFileName(selectedDeck.getName() + ".json");
+                        }
 
+                        File file = fc.showSaveDialog(mainLayout.getScene().getWindow());
                         if (file != null) {
                             try {
-                                mc.exportDeckToJson(selectedDeck.getDeckID(), file);
+                                if (format.equals("CSV")) {
+                                    mc.exportDeckToCsv(selectedDeck.getDeckID(), file);
+                                } else {
+                                    mc.exportDeckToJson(selectedDeck.getDeckID(), file);
+                                }
                                 Alert alert = new Alert(AlertType.INFORMATION);
                                 alert.setTitle("Success");
                                 alert.setHeaderText("Export successful");

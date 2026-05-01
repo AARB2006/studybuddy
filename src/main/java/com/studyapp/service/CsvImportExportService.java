@@ -18,6 +18,17 @@ public class CsvImportExportService {
     public void exportDeckToFile(Deck deck, List<Flashcard> cards, File file) throws CustomException {
         try (FileWriter writer = new FileWriter(file, StandardCharsets.UTF_8)) {
             writer.write(HEADER + "\n");
+            if (cards == null || cards.isEmpty()) {
+                writer.write(buildRow(
+                        deck.getName(),
+                        deck.getDescription(),
+                        "",
+                        "",
+                        ""
+                ) + "\n");
+                return;
+            }
+
             for (Flashcard card : cards) {
                 writer.write(buildRow(
                         deck.getName(),

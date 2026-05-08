@@ -18,8 +18,8 @@ public class DatabaseConnection {
     private static final String BASE_URL  = "jdbc:mysql://localhost:3306/";
     private static final String DB_URL    = "jdbc:mysql://localhost:3306/study_assistant";
     private static final String DB_NAME   = "study_assistant";
-    private static final String SCHEMA_SCRIPT = "/db/db_init.sql";
-    private static final String SAMPLE_DATA_SCRIPT = "/db/SampleData.sql";
+    private static final String SCHEMA_SCRIPT = "/db/StudyAssistantSchema.sql";
+    private static final String SAMPLE_DATA_SCRIPT = "/db/StudyAssistantSchema.sql";
 
     private static String USER;
     private static String PASS;

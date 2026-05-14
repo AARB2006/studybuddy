@@ -408,4 +408,110 @@ public class CsvImportExportService {
             this(deckName, description, new ArrayList<>());
         }
     }
+
+        /**
+     * Parses a CSV file and returns a flat list of all card candidates for UI preview.
+     *
+     * <p>Auto-detects the header format:
+     * <ul>
+     *   <li>{@code question,answer}                               – 2-column compact</li>
+     *   <li>{@code question,answer,difficulty}                    – 3-column compact</li>
+     *   <li>{@code deck_name,description,question,answer,difficulty} – full export format</li>
+     * </ul>
+     *
+     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
+     * otherwise {@code null} is returned to signal "must select" in the import UI.
+     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
+     *
+     * @param  file the CSV file to read
+     * @return flat list of card DTOs; never null
+     * @throws CustomException if the file is empty, unreadable, or has an unrecognised header
+     */
+    
+    
+        /**
+     * Parses a CSV file and returns a flat list of all card candidates for UI preview.
+     *
+     * <p>Auto-detects the header format:
+     * <ul>
+     *   <li>{@code question,answer}                               – 2-column compact</li>
+     *   <li>{@code question,answer,difficulty}                    – 3-column compact</li>
+     *   <li>{@code deck_name,description,question,answer,difficulty} – full export format</li>
+     * </ul>
+     *
+     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
+     * otherwise {@code null} is returned to signal "must select" in the import UI.
+     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
+     *
+     * @param  file the CSV file to read
+     * @return flat list of card DTOs; never null
+     * @throws CustomException if the file is empty, unreadable, or has an unrecognised header
+     */
+    public List<CardJson> previewCards(File file) throws CustomException {
+        List<List<String>> rows = parseCsv(file);
+        if (rows.isEmpty()) {
+            throw new CustomException("CSV file is empty.");
+        }
+
+        // Skip leading blank lines to locate the header row
+        int headerIdx = 0;
+        while (headerIdx < rows.size() && isBlankRow(rows.get(headerIdx))) {
+            headerIdx++;
+        }
+        if (headerIdx >= rows.size()) {
+            throw new CustomException("CSV file contains no data.");
+        }
+
+        // Normalise column names for comparison
+        List<String> header = rows.get(headerIdx).stream()
+            .map(this::normalizeHeader)
+            .collect(java.util.stream.Collectors.toList());
+
+        List<CardJson> result = new ArrayList<>();
+
+        if (header.equals(List.of("question", "answer"))
+                || header.equals(List.of("question", "answer", "difficulty"))) {
+            // Compact format: question, answer[, difficulty]
+            boolean hasDiff = header.size() == 3;
+            for (int i = headerIdx + 1; i < rows.size(); i++) {
+                List<String> row = rows.get(i);
+                if (isBlankRow(row) || row.size() < 2) continue;
+                String question = safeTrim(row.get(0));
+                String answer   = safeTrim(row.get(1));
+                if (question.isBlank() || answer.isBlank()) continue;
+                String diff = (hasDiff && row.size() > 2) ? safeTrim(row.get(2)) : null;
+                result.add(new CardJson(question, answer, previewDifficulty(diff)));
+            }
+        } else {
+            // Full export format: deck_name,description,question,answer,difficulty
+            // extractDataRows() validates the header and throws a clear error if wrong.
+            List<List<String>> dataRows = extractDataRows(rows);
+            for (List<String> row : dataRows) {
+                String question = safeTrim(row.get(2));
+                String answer   = safeTrim(row.get(3));
+                if (question.isBlank() || answer.isBlank()) continue;
+                String diff = row.size() > 4 ? safeTrim(row.get(4)) : null;
+                result.add(new CardJson(question, answer, previewDifficulty(diff)));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns "Easy", "Medium", or "Hard" if {@code raw} is a recognised value;
+     * otherwise returns {@code null}.
+     *
+     * <p>Unlike {@link #normaliseDifficulty}, this method does <em>not</em> fall back
+     * to "Medium" — unrecognised values are left as {@code null} so the import UI can
+     * prompt the user to choose a difficulty explicitly.
+     */
+    private String previewDifficulty(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String t = raw.trim();
+        if (t.equalsIgnoreCase("Easy"))   return "Easy";
+        if (t.equalsIgnoreCase("Medium")) return "Medium";
+        if (t.equalsIgnoreCase("Hard"))   return "Hard";
+        return null;
+    }
 }

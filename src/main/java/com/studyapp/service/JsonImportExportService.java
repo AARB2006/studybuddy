@@ -23,8 +23,26 @@ import com.studyapp.model.Flashcard;
 
 public class JsonImportExportService {
 
+    // Shared Gson instance configured for pretty-printed output
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    /**
+     * Imports decks and flashcards from a JSON file into the application.
+     *
+     * Flow:
+     *  1. Parse the file into a list of DeckJson objects via parseFile().
+     *  2. For each deck in the list:
+     *     a. Skip if the deck name is blank.
+     *     b. Skip if a deck with the same name already exists in memory (case-insensitive).
+     *     c. Create the deck via MainController and collect it.
+     *     d. For each card in the deck:
+     *        - Skip if question or answer is blank.
+     *        - Normalise the difficulty value (defaults to "Medium" if missing/invalid).
+     *        - Create the flashcard via MainController.
+     *  3. Return the total number of decks successfully imported.
+     *
+     * Note: All created objects are held in memory only until saveChanges() is called.
+     */
     public int importFromFile(File file, MainController mc) throws CustomException {
         List<DeckJson> deckJsonList = parseFile(file);
         int imported = 0;
@@ -33,21 +51,25 @@ public class JsonImportExportService {
 
         for (DeckJson deckJson : deckJsonList) {
             String rawName = deckJson.getDeckName();
+            // Skip decks with no name
             if (rawName == null || rawName.isBlank()) continue;
             String deckName = rawName.trim();
 
-            // Skip if name already exists
+            // Skip if a deck with this name already exists (prevents duplicates)
             boolean exists = mc.allDecks().stream()
                     .anyMatch(d -> d.getName().equalsIgnoreCase(deckName));
             if (exists) continue;
 
+            // Create the deck; null description is treated as empty string
             String desc = deckJson.getDescription() == null ? "" : deckJson.getDescription().trim();
             Deck newDeck = mc.createDeck(deckName, desc);
             importedDecks.add(newDeck);
 
+            // Import each card belonging to this deck
             List<CardJson> cards = deckJson.getCards();
             if (cards != null) {
                 for (CardJson c : cards) {
+                    // Skip cards that are missing a question or answer
                     if (c.getQuestion() == null || c.getQuestion().isBlank()) continue;
                     if (c.getAnswer()   == null || c.getAnswer().isBlank())   continue;
                     String difficulty = normaliseDifficulty(c.getDifficulty());
@@ -64,7 +86,18 @@ public class JsonImportExportService {
         return imported;
     }
 
+    /**
+     * Exports a single deck and its flashcards to a JSON file.
+     *
+     * Flow:
+     *  1. Convert each Flashcard into a CardJson (question, answer, difficulty).
+     *  2. Wrap everything into a DeckJson with the current timestamp as exported_at.
+     *  3. Serialise the DeckJson to the target file using Gson pretty-printing.
+     *
+     * Throws CustomException if the file cannot be written.
+     */
     public void exportDeckToFile(Deck deck, List<Flashcard> cards, File file) throws CustomException {
+        // Build the list of card data objects
         List<CardJson> cardJsonList = new ArrayList<>();
         for (Flashcard card : cards) {
             cardJsonList.add(new CardJson(
@@ -72,12 +105,15 @@ public class JsonImportExportService {
                     card.getAnswer(),
                     card.getDifficulty()));
         }
+
+        // Assemble the top-level deck object with an export timestamp
         DeckJson deckJson = new DeckJson(
                 deck.getName(),
                 deck.getDescription(),
                 LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                 cardJsonList);
 
+        // Write the JSON to the chosen file; rethrow IO errors as CustomException
         try (FileWriter writer = new FileWriter(file)) {
             GSON.toJson(deckJson, writer);
         } catch (IOException e) {
@@ -89,9 +125,21 @@ public class JsonImportExportService {
     // Helpers
     // ---------------------------------------------------------------
 
+    /**
+     * Reads and parses a JSON file into a list of DeckJson objects.
+     *
+     * Supports two formats:
+     *  - Multi-deck:  { "decks": [ {...}, {...} ] }
+     *  - Single-deck: { "deck_name": "...", "cards": [...] }
+     *
+     * Throws CustomException for malformed JSON, unreadable files, or a
+     * root element that is not a JSON object.
+     */
     private List<DeckJson> parseFile(File file) throws CustomException {
         try (FileReader reader = new FileReader(file)) {
             JsonElement root = JsonParser.parseReader(reader);
+
+            // Root must be a JSON object, not an array or primitive
             if (!root.isJsonObject()) {
                 throw new CustomException("Invalid JSON: root must be an object.");
             }
@@ -113,6 +161,10 @@ public class JsonImportExportService {
         }
     }
 
+    /**
+     * Normalises a raw difficulty string to one of "Easy", "Medium", or "Hard".
+     * Any null, blank, or unrecognised value defaults to "Medium".
+     */
     private String normaliseDifficulty(String raw) {
         if (raw == null || raw.isBlank()) return "Medium";
         String t = raw.trim();

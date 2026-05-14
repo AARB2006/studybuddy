@@ -13,6 +13,7 @@ import com.studyapp.model.CardReview;
 import com.studyapp.model.Deck;
 import com.studyapp.model.Flashcard;
 import com.studyapp.model.StudySession;
+import com.studyapp.service.CardJson;
 import com.studyapp.service.CsvImportExportService;
 import com.studyapp.service.JsonImportExportService;
 import com.studyapp.service.SaveService;
@@ -268,6 +269,63 @@ public class MainController {
         Deck deck = findDeck(deckID);
         List<Flashcard> cards = getFlashcardsByDeck(deckID);
         new CsvImportExportService().exportDeckToFile(deck, cards, file);
+    }
+
+        // --------- CARD PREVIEW (for ImportDialogPanel) ---------------
+
+    /**
+     * Parses a JSON file and returns all card data as a flat preview list.
+     * No Deck or Flashcard objects are created; the list is for UI preview only.
+     *
+     * @param  file  the JSON file to parse
+     * @return list of card DTOs (difficulty is {@code null} when not set or unrecognised)
+     * @throws CustomException on read or parse errors
+     */
+    public List<CardJson> previewJsonCards(File file) throws CustomException {
+        return new JsonImportExportService().previewCards(file);
+    }
+
+    /**
+     * Parses a CSV file and returns all card data as a flat preview list.
+     * No Deck or Flashcard objects are created; the list is for UI preview only.
+     *
+     * @param  file  the CSV file to parse
+     * @return list of card DTOs (difficulty is {@code null} when not set or unrecognised)
+     * @throws CustomException on read or parse errors
+     */
+    public List<CardJson> previewCsvCards(File file) throws CustomException {
+        return new CsvImportExportService().previewCards(file);
+    }
+
+    /**
+     * Adds a list of cards to an existing deck.
+     * Objects are created in memory only — call {@link #saveChanges()} to persist.
+     *
+     * @param deckID the ID of the target deck
+     * @param cards  cards to import; each must have a non-null difficulty
+     * @throws CustomException if the deck does not exist or a card cannot be created
+     */
+    public void importCardsToExistingDeck(int deckID, List<CardJson> cards) throws CustomException {
+        for (CardJson card : cards) {
+            createFlashcard(deckID, card.getQuestion(), card.getAnswer(), card.getDifficulty());
+        }
+    }
+
+    /**
+     * Creates a new deck and imports a list of cards into it.
+     * Objects are created in memory only — call {@link #saveChanges()} to persist.
+     *
+     * @param deckName    name for the new deck (must not be blank)
+     * @param description optional description for the new deck (may be blank)
+     * @param cards       cards to import; each must have a non-null difficulty
+     * @throws CustomException if the deck or any card cannot be created
+     */
+    public void importCardsToNewDeck(String deckName, String description, List<CardJson> cards)
+            throws CustomException {
+        Deck newDeck = createDeck(deckName, description);
+        for (CardJson card : cards) {
+            createFlashcard(newDeck.getDeckID(), card.getQuestion(), card.getAnswer(), card.getDifficulty());
+        }
     }
 
 }

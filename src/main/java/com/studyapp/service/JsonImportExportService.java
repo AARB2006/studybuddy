@@ -173,4 +173,114 @@ public class JsonImportExportService {
         if (t.equalsIgnoreCase("Hard"))   return "Hard";
         return "Medium";
     }
+
+        /**
+     * Parses a JSON file and returns a flat list of all card candidates for UI preview.
+     *
+     * <p>Supported root formats:
+     * <ul>
+     *   <li>Array of card objects: {@code [{question, answer, difficulty}, ...]}</li>
+     *   <li>Multi-deck object:     {@code {"decks": [{cards: [...]}, ...]}}</li>
+     *   <li>Single-deck object:    {@code {"deck_name": ..., "cards": [...]}}</li>
+     * </ul>
+     *
+     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
+     * otherwise {@code null} is returned to signal "must select" in the import UI.
+     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
+     *
+     * @param  file the JSON file to read
+     * @return flat list of card DTOs; never null
+     * @throws CustomException if the file cannot be read or is malformed
+     */
+        /**
+     * Parses a JSON file and returns a flat list of all card candidates for UI preview.
+     *
+     * <p>Supported root formats:
+     * <ul>
+     *   <li>Array of card objects: {@code [{question, answer, difficulty}, ...]}</li>
+     *   <li>Multi-deck object:     {@code {"decks": [{cards: [...]}, ...]}}</li>
+     *   <li>Single-deck object:    {@code {"deck_name": ..., "cards": [...]}}</li>
+     * </ul>
+     *
+     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
+     * otherwise {@code null} is returned to signal "must select" in the import UI.
+     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
+     *
+     * @param  file the JSON file to read
+     * @return flat list of card DTOs; never null
+     * @throws CustomException if the file cannot be read or is malformed
+     */
+    
+        public List<CardJson> previewCards(File file) throws CustomException {
+        List<CardJson> result = new ArrayList<>();
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonElement root = JsonParser.parseReader(reader);
+
+            if (root.isJsonArray()) {
+                // Flat card array: [{question, answer, difficulty}, ...]
+                CardJson[] arr = GSON.fromJson(root, CardJson[].class);
+                for (CardJson c : arr) {
+                    if (c.getQuestion() == null || c.getQuestion().isBlank()) continue;
+                    if (c.getAnswer()   == null || c.getAnswer().isBlank())   continue;
+                    result.add(new CardJson(
+                        c.getQuestion().trim(),
+                        c.getAnswer().trim(),
+                        previewDifficulty(c.getDifficulty())
+                    ));
+                }
+            } else if (root.isJsonObject()) {
+                JsonObject obj = root.getAsJsonObject();
+                List<DeckJson> decks;
+                if (obj.has("decks")) {
+                    DeckJson[] arr = GSON.fromJson(obj.get("decks"), DeckJson[].class);
+                    decks = Arrays.asList(arr);
+                } else {
+                    // Single-deck format {"deck_name": ..., "cards": [...]}
+                    decks = List.of(GSON.fromJson(obj, DeckJson.class));
+                }
+                for (DeckJson deck : decks) {
+                    List<CardJson> cards = deck.getCards();
+                    if (cards == null) continue;
+                    for (CardJson c : cards) {
+                        if (c.getQuestion() == null || c.getQuestion().isBlank()) continue;
+                        if (c.getAnswer()   == null || c.getAnswer().isBlank())   continue;
+                        result.add(new CardJson(
+                            c.getQuestion().trim(),
+                            c.getAnswer().trim(),
+                            previewDifficulty(c.getDifficulty())
+                        ));
+                    }
+                }
+            } else {
+                throw new CustomException("Invalid JSON: root must be an object or array.");
+            }
+
+        } catch (JsonParseException e) {
+            throw new CustomException("Malformed JSON file: " + e.getMessage());
+        } catch (IOException e) {
+            throw new CustomException("Could not read file: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns "Easy", "Medium", or "Hard" if {@code raw} is a recognised value;
+     * otherwise returns {@code null}.
+     *
+     * <p>Unlike {@link #normaliseDifficulty}, this method does <em>not</em> fall back
+     * to "Medium" — unrecognised values are left as {@code null} so the import UI can
+     * prompt the user to choose a difficulty explicitly.
+     */
+    private String previewDifficulty(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String t = raw.trim();
+        if (t.equalsIgnoreCase("Easy"))   return "Easy";
+        if (t.equalsIgnoreCase("Medium")) return "Medium";
+        if (t.equalsIgnoreCase("Hard"))   return "Hard";
+        return null;
+    }
+
+    
 }

@@ -6,158 +6,35 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import com.studyapp.controller.CustomException;
-import com.studyapp.controller.MainController;
 import com.studyapp.model.Deck;
 import com.studyapp.model.Flashcard;
 
 public class CsvImportExportService {
 
     // The expected header row written at the top of every exported CSV
-    private static final String HEADER = "deck_name,description,question,answer,difficulty";
+    private static final String HEADER_WITH_DIFF = "question,answer,difficulty";
+    private static final String HEADER_NO_DIFF   = "question,answer";
 
-    // Column names used to validate an imported file's header row (order matters)
-    private static final List<String> EXPECTED_HEADERS = List.of(
-            "deck_name",
-            "description",
-            "question",
-            "answer",
-            "difficulty"
-    );
-
-    /**
-     * Imports decks and flashcards from a CSV file into the application.
-     *
-     * Flow:
-     *  1. Parse the raw file text into a list of rows via parseCsv().
-     *  2. Validate the header row and strip blanks via extractDataRows().
-     *  3. Group data rows by deck name (case-insensitive) into CsvDeckData buckets:
-     *     - First occurrence of a deck name registers the deck + description.
-     *     - Subsequent rows for the same deck append cards.
-     *     - Conflicting descriptions for the same deck name throw an exception.
-     *     - Rows with a blank question or answer are skipped.
-     *  4. For each collected deck:
-     *     - Skip if a deck with the same name already exists in memory.
-     *     - Create the deck via MainController.
-     *     - Create each card via MainController.
-     *  5. Return the number of decks successfully imported.
-     *
-     * Note: All created objects are held in memory only until saveChanges() is called.
-     */
-    public int importFromFile(File file, MainController mc) throws CustomException {
-        // Step 1-2: parse file and validate/strip header
-        List<List<String>> rows = parseCsv(file);
-        List<List<String>> dataRows = extractDataRows(rows);
-
-        // Step 3: group rows by deck name, collecting cards per deck
-        Map<String, CsvDeckData> deckRows = new LinkedHashMap<>();
-        for (List<String> row : dataRows) {
-            String rawName = row.get(0);
-            if (rawName == null || rawName.isBlank()) {
-                continue;
-            }
-
-            // Trim and normalise each field
-            String deckName = rawName.trim();
-            String description = safeTrim(row.get(1));
-            String question = safeTrim(row.get(2));
-            String answer = safeTrim(row.get(3));
-            String difficulty = normaliseDifficulty(row.get(4));
-
-            // Use a lowercase key so grouping is case-insensitive
-            String deckKey = deckName.toLowerCase(Locale.ROOT);
-            CsvDeckData deckData = deckRows.get(deckKey);
-            if (deckData == null) {
-                // First time seeing this deck — register it
-                deckData = new CsvDeckData(deckName, description);
-                deckRows.put(deckKey, deckData);
-            } else if (!description.isBlank()
-                    && !deckData.description().isBlank()
-                    && !deckData.description().equals(description)) {
-                // Two rows claim different descriptions for the same deck — ambiguous
-                throw new CustomException("CSV contains conflicting descriptions for deck '" + deckName + "'.");
-            } else if (deckData.description().isBlank() && !description.isBlank()) {
-                // Fill in a description that was missing on earlier rows
-                deckData = new CsvDeckData(deckData.deckName(), description, deckData.cards());
-                deckRows.put(deckKey, deckData);
-            }
-
-            // Skip rows that have no card data
-            if (question.isBlank() || answer.isBlank()) {
-                continue;
-            }
-
-            deckRows.get(deckKey).cards().add(new CardJson(question, answer, difficulty));
-        }
-
-        // Step 4: persist each collected deck and its cards through MainController
-        int imported = 0;
-
-        for (CsvDeckData deckData : deckRows.values()) {
-            // Skip decks whose names already exist in memory (prevents duplicates)
-            boolean exists = mc.allDecks().stream()
-                    .anyMatch(d -> d.getName().equalsIgnoreCase(deckData.deckName()));
-            if (exists) {
-                continue;
-            }
-
-            Deck newDeck = mc.createDeck(deckData.deckName(), deckData.description());
-
-            for (CardJson card : deckData.cards()) {
-                mc.createFlashcard(
-                        newDeck.getDeckID(),
-                        card.getQuestion(),
-                        card.getAnswer(),
-                        card.getDifficulty()
-                );
-            }
-
-            imported++;
-        }
-
-        return imported;
-    }
+    // Accepted column sets for imported files
+    private static final List<String> HEADERS_3 = List.of("question", "answer", "difficulty");
+    private static final List<String> HEADERS_2 = List.of("question", "answer");
 
     /**
      * Exports a single deck and its flashcards to a CSV file.
-     *
-     * Flow:
-     *  1. Write the fixed header row.
-     *  2. If the deck has no cards, write a single row with only the deck metadata
-     *     and empty question/answer/difficulty columns.
-     *  3. Otherwise write one row per flashcard, repeating deck_name and description
-     *     on every row (flat denormalised format).
-     *
-     * All field values are quoted and sanitised against CSV formula injection.
-     * Throws CustomException if the file cannot be written.
      */
+    
     public void exportDeckToFile(Deck deck, List<Flashcard> cards, File file) throws CustomException {
         try (FileWriter writer = new FileWriter(file, StandardCharsets.UTF_8)) {
-            // Always write the header first
-            writer.write(HEADER + "\n");
+            writer.write(HEADER_WITH_DIFF + "\n");
 
-            if (cards == null || cards.isEmpty()) {
-                // Deck exists but has no cards — write a metadata-only row
-                writer.write(buildRow(
-                        deck.getName(),
-                        deck.getDescription(),
-                        "",
-                        "",
-                        ""
-                ) + "\n");
-                return;
-            }
+            if (cards == null || cards.isEmpty()) return;
 
-            // One row per card, carrying deck_name and description on every line
             for (Flashcard card : cards) {
                 writer.write(buildRow(
-                        deck.getName(),
-                        deck.getDescription(),
                         card.getQuestion(),
                         card.getAnswer(),
                         card.getDifficulty()
@@ -169,66 +46,9 @@ public class CsvImportExportService {
     }
 
     /**
-     * Validates the header row and returns only the non-blank data rows.
-     *
-     * Flow:
-     *  1. Reject an entirely empty file.
-     *  2. Skip any leading blank rows to find the header.
-     *  3. Verify the header has exactly the required columns in the correct order.
-     *  4. Collect every subsequent non-blank row, rejecting any with the wrong
-     *     column count.
-     */
-    private List<List<String>> extractDataRows(List<List<String>> rows) throws CustomException {
-        if (rows.isEmpty()) {
-            throw new CustomException("CSV file is empty.");
-        }
-
-        // Skip leading blank lines to find the actual header row
-        int headerIndex = 0;
-        while (headerIndex < rows.size() && isBlankRow(rows.get(headerIndex))) {
-            headerIndex++;
-        }
-        if (headerIndex >= rows.size()) {
-            throw new CustomException("CSV file is empty.");
-        }
-
-        // Validate column count and each column name
-        List<String> header = rows.get(headerIndex);
-        if (header.size() != EXPECTED_HEADERS.size()) {
-            throw new CustomException("Invalid CSV header. Expected: " + HEADER);
-        }
-
-        for (int i = 0; i < EXPECTED_HEADERS.size(); i++) {
-            if (!EXPECTED_HEADERS.get(i).equals(normalizeHeader(header.get(i)))) {
-                throw new CustomException("Invalid CSV header. Expected: " + HEADER);
-            }
-        }
-
-        // Collect data rows, skipping blanks and rejecting malformed ones
-        List<List<String>> dataRows = new ArrayList<>();
-        for (int i = headerIndex + 1; i < rows.size(); i++) {
-            List<String> row = rows.get(i);
-            if (isBlankRow(row)) {
-                continue;
-            }
-            if (row.size() != EXPECTED_HEADERS.size()) {
-                throw new CustomException("Invalid CSV row format near line " + (i + 1) + ".");
-            }
-            dataRows.add(row);
-        }
-        return dataRows;
-    }
-
-    /**
-     * Reads a CSV file and splits it into a list of rows, each row being a list
-     * of field strings. Handles RFC 4180 quoting rules:
-     *  - Fields wrapped in double-quotes may contain commas and newlines.
-     *  - A pair of double-quotes ("") inside a quoted field represents a literal quote.
-     *
-     * Additional handling:
-     *  - Strips a leading UTF-8 BOM character if present.
-     *  - Normalises CRLF (\r\n) to a single line break.
-     *  - Throws CustomException for unmatched opening quotes or unreadable files.
+     * Reads a CSV file and splits it into a list of rows (each row is a list of
+     * field strings). Handles RFC 4180 quoting, BOM stripping, and CRLF pairs.
+     * Throws CustomException for unmatched quotes or unreadable files.
      */
     private List<List<String>> parseCsv(File file) throws CustomException {
         try {
@@ -319,29 +139,9 @@ public class CsvImportExportService {
     }
 
     /**
-     * Normalises a raw difficulty string to one of "Easy", "Medium", or "Hard".
-     * Any null, blank, or unrecognised value defaults to "Medium".
-     */
-    private String normaliseDifficulty(String raw) {
-        if (raw == null || raw.isBlank()) return "Medium";
-        String t = raw.trim();
-        if (t.equalsIgnoreCase("Easy"))   return "Easy";
-        if (t.equalsIgnoreCase("Medium")) return "Medium";
-        if (t.equalsIgnoreCase("Hard"))   return "Hard";
-        return "Medium";
-    }
-
-    /**
-     * Guards against CSV formula injection (a spreadsheet security issue where
-     * values starting with =, +, -, @ are interpreted as formulas by Excel/Sheets).
-     *
-     * Flow:
-     *  1. Remove null bytes.
-     *  2. Find the first non-whitespace character (ignoring various Unicode spaces).
-     *  3. If that character is a formula trigger (=, +, -, @, tab, CR), prepend a
-     *     single quote to neutralise it.
-     *  4. Apply the same neutralisation to any trigger character that appears after
-     *     an embedded newline.
+     * Guards against CSV formula injection by prepending a single quote to values
+     * that start with a formula trigger character (=, +, -, @, tab, CR).
+     * Also neutralises triggers after embedded newlines.
      */
     private String sanitizeFormulaInjection(String value) {
         if (value == null) return "";
@@ -397,115 +197,59 @@ public class CsvImportExportService {
         return sb.toString();
     }
 
-    /**
-     * Immutable value object that accumulates a deck's name, description, and
-     * cards while grouping CSV rows during import.
-     * The compact constructor (deckName, description) initialises cards as an
-     * empty mutable list so cards can be appended row by row.
-     */
-    private record CsvDeckData(String deckName, String description, List<CardJson> cards) {
-        private CsvDeckData(String deckName, String description) {
-            this(deckName, description, new ArrayList<>());
-        }
-    }
+
 
         /**
      * Parses a CSV file and returns a flat list of all card candidates for UI preview.
      *
-     * <p>Auto-detects the header format:
-     * <ul>
-     *   <li>{@code question,answer}                               – 2-column compact</li>
-     *   <li>{@code question,answer,difficulty}                    – 3-column compact</li>
-     *   <li>{@code deck_name,description,question,answer,difficulty} – full export format</li>
-     * </ul>
-     *
-     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
-     * otherwise {@code null} is returned to signal "must select" in the import UI.
-     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
-     *
      * @param  file the CSV file to read
      * @return flat list of card DTOs; never null
      * @throws CustomException if the file is empty, unreadable, or has an unrecognised header
      */
     
     
-        /**
-     * Parses a CSV file and returns a flat list of all card candidates for UI preview.
-     *
-     * <p>Auto-detects the header format:
-     * <ul>
-     *   <li>{@code question,answer}                               – 2-column compact</li>
-     *   <li>{@code question,answer,difficulty}                    – 3-column compact</li>
-     *   <li>{@code deck_name,description,question,answer,difficulty} – full export format</li>
-     * </ul>
-     *
-     * <p>Difficulty is preserved as "Easy", "Medium", or "Hard" if recognised;
-     * otherwise {@code null} is returned to signal "must select" in the import UI.
-     * Unlike {@link #importFromFile}, no Deck or Flashcard objects are created.
-     *
-     * @param  file the CSV file to read
-     * @return flat list of card DTOs; never null
-     * @throws CustomException if the file is empty, unreadable, or has an unrecognised header
+    /**
+     * Parses a CSV file and returns a flat list of card candidates for UI preview.
+     * Accepted headers: {@code question,answer} or {@code question,answer,difficulty}.
+     * Difficulty is normalised to "Easy", "Medium", or "Hard" if recognised; null otherwise.
      */
     public List<CardJson> previewCards(File file) throws CustomException {
         List<List<String>> rows = parseCsv(file);
-        if (rows.isEmpty()) {
-            throw new CustomException("CSV file is empty.");
-        }
+        if (rows.isEmpty()) throw new CustomException("CSV file is empty.");
 
-        // Skip leading blank lines to locate the header row
         int headerIdx = 0;
-        while (headerIdx < rows.size() && isBlankRow(rows.get(headerIdx))) {
-            headerIdx++;
-        }
-        if (headerIdx >= rows.size()) {
-            throw new CustomException("CSV file contains no data.");
-        }
+        while (headerIdx < rows.size() && isBlankRow(rows.get(headerIdx))) headerIdx++;
+        if (headerIdx >= rows.size()) throw new CustomException("CSV file contains no data.");
 
-        // Normalise column names for comparison
         List<String> header = rows.get(headerIdx).stream()
-            .map(this::normalizeHeader)
-            .collect(java.util.stream.Collectors.toList());
+                .map(this::normalizeHeader)
+                .collect(java.util.stream.Collectors.toList());
+
+        boolean hasDiff;
+        if (header.equals(HEADERS_3)) {
+            hasDiff = true;
+        } else if (header.equals(HEADERS_2)) {
+            hasDiff = false;
+        } else {
+            throw new CustomException(
+                "Invalid CSV header. Expected \"" + HEADER_WITH_DIFF
+                + "\" or \"" + HEADER_NO_DIFF + "\".");
+        }
 
         List<CardJson> result = new ArrayList<>();
-
-        if (header.equals(List.of("question", "answer"))
-                || header.equals(List.of("question", "answer", "difficulty"))) {
-            // Compact format: question, answer[, difficulty]
-            boolean hasDiff = header.size() == 3;
-            for (int i = headerIdx + 1; i < rows.size(); i++) {
-                List<String> row = rows.get(i);
-                if (isBlankRow(row) || row.size() < 2) continue;
-                String question = safeTrim(row.get(0));
-                String answer   = safeTrim(row.get(1));
-                if (question.isBlank() || answer.isBlank()) continue;
-                String diff = (hasDiff && row.size() > 2) ? safeTrim(row.get(2)) : null;
-                result.add(new CardJson(question, answer, previewDifficulty(diff)));
-            }
-        } else {
-            // Full export format: deck_name,description,question,answer,difficulty
-            // extractDataRows() validates the header and throws a clear error if wrong.
-            List<List<String>> dataRows = extractDataRows(rows);
-            for (List<String> row : dataRows) {
-                String question = safeTrim(row.get(2));
-                String answer   = safeTrim(row.get(3));
-                if (question.isBlank() || answer.isBlank()) continue;
-                String diff = row.size() > 4 ? safeTrim(row.get(4)) : null;
-                result.add(new CardJson(question, answer, previewDifficulty(diff)));
-            }
+        for (int i = headerIdx + 1; i < rows.size(); i++) {
+            List<String> row = rows.get(i);
+            if (isBlankRow(row) || row.size() < 2) continue;
+            String question = safeTrim(row.get(0));
+            String answer   = safeTrim(row.get(1));
+            if (question.isBlank() || answer.isBlank()) continue;
+            String diff = (hasDiff && row.size() > 2) ? safeTrim(row.get(2)) : null;
+            result.add(new CardJson(question, answer, previewDifficulty(diff)));
         }
-
         return result;
     }
 
-    /**
-     * Returns "Easy", "Medium", or "Hard" if {@code raw} is a recognised value;
-     * otherwise returns {@code null}.
-     *
-     * <p>Unlike {@link #normaliseDifficulty}, this method does <em>not</em> fall back
-     * to "Medium" — unrecognised values are left as {@code null} so the import UI can
-     * prompt the user to choose a difficulty explicitly.
-     */
+    /** Returns "Easy", "Medium", or "Hard" if recognised; null otherwise. */
     private String previewDifficulty(String raw) {
         if (raw == null || raw.isBlank()) return null;
         String t = raw.trim();

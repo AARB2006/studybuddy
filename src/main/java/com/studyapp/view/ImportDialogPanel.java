@@ -29,6 +29,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.CheckBoxTableCell;
@@ -355,8 +356,7 @@ public class ImportDialogPanel {
             addToDeckLbl,
             existingRadio, existingCombo,
             newDeckRadio, nameField, descField,
-            csvBtn, jsonBtn,
-            importBtn, cancelBtn
+            csvBtn, jsonBtn
         );
 
         // ════════════════════════════════════════
@@ -370,8 +370,8 @@ public class ImportDialogPanel {
         selectAllCb.setFont(Font.font("Serif", 13));
         selectAllCb.setTextFill(Color.web(PRIMARY_BLUE));
         HBox selectAllRow = new HBox(selectAllCb);
-        selectAllRow.setAlignment(Pos.CENTER_RIGHT);
-        selectAllRow.setPadding(new Insets(0, 4, 4, 0));
+        selectAllRow.setAlignment(Pos.CENTER_LEFT);
+        selectAllRow.setPadding(new Insets(0, 0, 4, 4));
 
         // Placeholder (shown before any file is loaded)
         StackPane placeholder = new StackPane();
@@ -397,7 +397,12 @@ public class ImportDialogPanel {
             table.setManaged(hasRows);
         });
 
-        right.getChildren().addAll(selectAllRow, placeholder, table);
+        HBox actionRow = new HBox(16, importBtn, cancelBtn);
+        HBox.setHgrow(importBtn, Priority.ALWAYS);
+        HBox.setHgrow(cancelBtn, Priority.ALWAYS);
+        actionRow.setPadding(new Insets(12, 0, 0, 0));
+
+        right.getChildren().addAll(selectAllRow, placeholder, table, actionRow);
 
         body.getChildren().addAll(left, right);
         root.getChildren().addAll(titleLbl, body);
@@ -431,6 +436,7 @@ public class ImportDialogPanel {
         TableView<CardRowData> table = new TableView<>(rows);
         table.setEditable(true);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setFixedCellSize(-1);
         table.setStyle(
             "-fx-background-color: " + PANEL_BG + "; " +
             "-fx-border-color: " + PANEL_BORDER + "; " +
@@ -508,18 +514,29 @@ public class ImportDialogPanel {
 
         return new TableCell<CardRowData, String>() {
 
-            private final TextField tf = new TextField();
+            private final TextArea ta = new TextArea();
             private CardRowData boundRow = null;
 
             {
-                tf.setStyle(
+                ta.setWrapText(true);
+                ta.setStyle(
                     "-fx-background-color: white; " +
                     "-fx-border-color: " + PANEL_BORDER + "; " +
                     "-fx-border-width: 1; " +
                     "-fx-border-radius: 4; -fx-background-radius: 4; " +
-                    "-fx-font-family: Serif; -fx-font-size: 13; -fx-padding: 4 6;"
+                    "-fx-font-family: Serif; -fx-font-size: 15; -fx-padding: 4 6;"
                 );
-                tf.setMaxWidth(Double.MAX_VALUE);
+                ta.setMaxWidth(Double.MAX_VALUE);
+                ta.setMinHeight(54);
+                ta.textProperty().addListener((obs, old, nv) -> adjustHeight(nv));
+            }
+
+            private void adjustHeight(String text) {
+                if (text == null) text = "";
+                long explicit = text.chars().filter(c -> c == '\n').count();
+                double approxWrapped = text.length() / 50.0;
+                double lines = Math.max(1, explicit + 1 + approxWrapped);
+                ta.setPrefHeight(Math.max(54, lines * 22 + 14));
             }
 
             @Override
@@ -530,7 +547,7 @@ public class ImportDialogPanel {
                 if (empty || row == null) {
                     // Detach from the old row when the cell is cleared
                     if (boundRow != null) {
-                        tf.textProperty().unbindBidirectional(propGetter.apply(boundRow));
+                        ta.textProperty().unbindBidirectional(propGetter.apply(boundRow));
                         boundRow = null;
                     }
                     setGraphic(null);
@@ -539,12 +556,13 @@ public class ImportDialogPanel {
                     // Re-bind only when the cell has been recycled for a different row
                     if (boundRow != row) {
                         if (boundRow != null) {
-                            tf.textProperty().unbindBidirectional(propGetter.apply(boundRow));
+                            ta.textProperty().unbindBidirectional(propGetter.apply(boundRow));
                         }
                         boundRow = row;
-                        tf.textProperty().bindBidirectional(propGetter.apply(row));
+                        ta.textProperty().bindBidirectional(propGetter.apply(row));
                     }
-                    setGraphic(tf);
+                    adjustHeight(ta.getText());
+                    setGraphic(ta);
                     setText(null);
                 }
             }
@@ -569,7 +587,7 @@ public class ImportDialogPanel {
                 combo.getItems().addAll("--Select Difficulty--", "Easy", "Medium", "Hard");
                 combo.setMaxWidth(Double.MAX_VALUE);
                 combo.setStyle(
-                    "-fx-font-family: Serif; -fx-font-size: 13; " +
+                    "-fx-font-family: Serif; -fx-font-size: 15; " +
                     "-fx-background-color: white; " +
                     "-fx-border-color: " + PANEL_BORDER + "; " +
                     "-fx-border-radius: 4;"
@@ -886,15 +904,15 @@ public class ImportDialogPanel {
     private static Button actionButton(String text, String normalColour, String hoverColour) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setPrefHeight(50);
+        btn.setPrefHeight(62);
         String normal   = "-fx-background-color: " + normalColour + "; -fx-text-fill: white; " +
-                          "-fx-font-family: Serif; -fx-font-size: 16; " +
+                          "-fx-font-family: Serif; -fx-font-size: 18; " +
                           "-fx-background-radius: 28; -fx-cursor: hand;";
         String hover    = "-fx-background-color: " + hoverColour  + "; -fx-text-fill: white; " +
-                          "-fx-font-family: Serif; -fx-font-size: 16; " +
+                          "-fx-font-family: Serif; -fx-font-size: 18; " +
                           "-fx-background-radius: 28; -fx-cursor: hand;";
         String disabled = "-fx-background-color: #b0b0b0; -fx-text-fill: #e8e8e8; " +
-                          "-fx-font-family: Serif; -fx-font-size: 16; -fx-background-radius: 28;";
+                          "-fx-font-family: Serif; -fx-font-size: 18; -fx-background-radius: 28;";
         btn.setStyle(normal);
         btn.setOnMouseEntered(e -> { if (!btn.isDisabled()) btn.setStyle(hover);  });
         btn.setOnMouseExited(e  -> { if (!btn.isDisabled()) btn.setStyle(normal); });

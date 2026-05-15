@@ -1,8 +1,8 @@
-deck_name,description,question,answer
-Computer Networks,Core networking concepts and protocols,What is an IP address?,A numerical label assigned to each device on a network used for identification and location.
-Computer Networks,Core networking concepts and protocols,What does DNS stand for?,Domain Name System — it translates human-readable domain names into IP addresses.
-Computer Networks,Core networking concepts and protocols,What is the difference between TCP and UDP?,TCP is connection-oriented and reliable; UDP is connectionless and faster but unreliable.
-Computer Networks,Core networking concepts and protocols,What is a subnet mask?,A 32-bit number that divides an IP address into network and host portions.
-Computer Networks,Core networking concepts and protocols,What is HTTP?,HyperText Transfer Protocol — the foundation of data communication on the web.
-Computer Networks,Core networking concepts and protocols,What is a MAC address?,A unique hardware identifier assigned to a network interface card.
-Computer Networks,Core networking concepts and protocols,What is a firewall?,A security system that monitors and controls incoming and outgoing network traffic.
+question,answer
+What is an IP address?,A numerical label assigned to each device on a network used for identification and location.
+What does DNS stand for?,Domain Name System — it translates human-readable domain names into IP addresses.
+What is the difference between TCP and UDP?,TCP is connection-oriented and reliable; UDP is connectionless and faster but unreliable.
+What is a subnet mask?,A 32-bit number that divides an IP address into network and host portions.
+What is HTTP?,HyperText Transfer Protocol — the foundation of data communication on the web.
+What is a MAC address?,A unique hardware identifier assigned to a network interface card.
+What is a firewall?,A security system that monitors and controls incoming and outgoing network traffic.

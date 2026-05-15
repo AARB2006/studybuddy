@@ -251,14 +251,6 @@ public class MainController {
     }
 
     // --------- JSON IMPORT / EXPORT --------------
-    public int importFromJson(File file) throws CustomException {
-        return new JsonImportExportService().importFromFile(file, this);
-    }
-
-    public int importFromCsv(File file) throws CustomException {
-        return new CsvImportExportService().importFromFile(file, this);
-    }
-
     public void exportDeckToJson(int deckID, File file) throws CustomException {
         Deck deck = findDeck(deckID);
         List<Flashcard> cards = getFlashcardsByDeck(deckID);

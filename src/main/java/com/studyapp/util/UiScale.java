@@ -7,6 +7,9 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Screen;
 
 public final class UiScale {
+    public static final String TITLE_FONT = "Georgia";
+    public static final String UI_FONT = "Segoe UI";
+
     private static final double BASE_WIDTH = 1920.0;
     private static final double BASE_HEIGHT = 1080.0;
     private static final double MIN_SCALE = 0.85;
@@ -35,6 +38,34 @@ public final class UiScale {
         return Font.font(family, weight, size(size));
     }
 
+    public static Font titleFont(double size) {
+        return font(TITLE_FONT, size);
+    }
+
+    public static Font headingFont(double size) {
+        return font(UI_FONT, FontWeight.SEMI_BOLD, size);
+    }
+
+    public static Font bodyFont(double size) {
+        return font(UI_FONT, size);
+    }
+
+    public static Font buttonFont(double size) {
+        return font(UI_FONT, FontWeight.SEMI_BOLD, size);
+    }
+
+    public static Font emphasisFont(double size) {
+        return font(UI_FONT, FontWeight.BOLD, size);
+    }
+
+    public static String uiFontCss(double size) {
+        return "-fx-font-family: '" + UI_FONT + "'; -fx-font-size: " + size(size) + "px;";
+    }
+
+    public static String buttonFontCss(double size) {
+        return uiFontCss(size) + " -fx-font-weight: bold;";
+    }
+
     public static Insets insets(double all) {
         return new Insets(size(all));
     }
@@ -43,3 +74,4 @@ public final class UiScale {
         return new Insets(size(top), size(right), size(bottom), size(left));
     }
 }
+

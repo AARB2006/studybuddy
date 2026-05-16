@@ -17,7 +17,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
 
 public class DashboardPanel {
 
@@ -67,13 +66,13 @@ public class DashboardPanel {
         HBox.setHgrow(recentDecks, Priority.ALWAYS);
 
         Label recentHeader = new Label("Recent Decks");
-        recentHeader.setFont(UiScale.font("Serif", 42));
+        recentHeader.setFont(UiScale.headingFont(42));
         recentHeader.setTextFill(Color.web(PRIMARY_BLUE));
 
         VBox deckList = new VBox(16);
         if (stats.recentDecks().isEmpty()) {
             Label emptyState = new Label("No decks available yet.");
-            emptyState.setFont(UiScale.font("Serif", 22));
+            emptyState.setFont(UiScale.bodyFont(22));
             emptyState.setTextFill(Color.web("#475569"));
             deckList.getChildren().add(emptyState);
         } else {
@@ -93,7 +92,7 @@ public class DashboardPanel {
         chartBox.setMaxHeight(UiScale.size(540));
 
         Label chartTitle = new Label("Card Difficulty Mix");
-        chartTitle.setFont(UiScale.font("Serif", 36));
+        chartTitle.setFont(UiScale.headingFont(36));
         chartTitle.setTextFill(Color.web(PRIMARY_BLUE));
 
         PieChart.Data easyData = new PieChart.Data("Easy", stats.easyCount() > 0 ? stats.easyCount() : 0.001);
@@ -171,7 +170,7 @@ public class DashboardPanel {
         Circle dot = new Circle(UiScale.size(8), Color.web(colorHex));
 
         Label lbl = new Label(name);
-        lbl.setFont(UiScale.font("SansSerif", 16));
+        lbl.setFont(UiScale.bodyFont(16));
         lbl.setTextFill(Color.web("#333333"));
 
         item.getChildren().addAll(dot, lbl);
@@ -180,7 +179,7 @@ public class DashboardPanel {
 
     private static Label createHeaderLabel(String text) {
         Label header = new Label(text);
-        header.setFont(UiScale.font("Serif", 64));
+        header.setFont(UiScale.titleFont(64));
         header.setTextFill(Color.WHITE);
         header.setMaxWidth(Double.MAX_VALUE);
         header.setAlignment(Pos.CENTER);
@@ -196,11 +195,11 @@ public class DashboardPanel {
         box.setMaxWidth(Double.MAX_VALUE);
 
         Label titleLbl = new Label(title);
-        titleLbl.setFont(UiScale.font("Serif", 22));
+        titleLbl.setFont(UiScale.headingFont(22));
         titleLbl.setTextFill(Color.BLACK);
 
         Label valLbl = new Label(value);
-        valLbl.setFont(UiScale.font("Serif", 32));
+        valLbl.setFont(UiScale.emphasisFont(32));
         valLbl.setTextFill(Color.web(PRIMARY_BLUE));
 
         box.getChildren().addAll(titleLbl, valLbl);
@@ -214,13 +213,13 @@ public class DashboardPanel {
         item.setStyle(DECK_ITEM_STYLE);
 
         Label title = new Label(deck.getName());
-        title.setFont(UiScale.font("Serif", 24));
+        title.setFont(UiScale.headingFont(24));
         title.setTextFill(Color.BLACK);
         title.setWrapText(true);
 
         Label details = new Label("Cards: " + mc.getFlashcardsByDeck(deck.getDeckID()).size()
                 + "    Progress: " + mc.getDeckProgress(deck.getDeckID()) + "%");
-        details.setFont(UiScale.font("Serif", 18));
+        details.setFont(UiScale.bodyFont(18));
         details.setTextFill(Color.web(PRIMARY_BLUE));
 
         item.getChildren().addAll(title, details);
@@ -234,3 +233,4 @@ public class DashboardPanel {
         return item;
     }
 }
+

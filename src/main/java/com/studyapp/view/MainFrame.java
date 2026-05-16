@@ -14,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -47,7 +46,7 @@ public class MainFrame {
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label appTitleLabel = new Label("Study Assistant\nApplication");
-        appTitleLabel.setFont(UiScale.font("Serif", 38));
+        appTitleLabel.setFont(UiScale.titleFont(38));
         appTitleLabel.setWrapText(true);
         appTitleLabel.setMaxWidth(UiScale.size(242));
         appTitleLabel.setTextFill(Color.web(PRIMARY_BLUE));
@@ -68,7 +67,7 @@ public class MainFrame {
         Button exitBtn = new Button("EXIT");
         exitBtn.setMaxWidth(Double.MAX_VALUE);
         exitBtn.setPrefHeight(UiScale.size(56));
-        exitBtn.setFont(UiScale.font("Serif", 20));
+        exitBtn.setFont(UiScale.buttonFont(20));
         String exitDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
         String exitHover = "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
         exitBtn.setStyle(exitDefault);
@@ -142,7 +141,7 @@ public class MainFrame {
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label appTitleLabel = new Label("Study Assistant\nApplication");
-        appTitleLabel.setFont(UiScale.font("Serif", 38));
+        appTitleLabel.setFont(UiScale.titleFont(38));
         appTitleLabel.setWrapText(true);
         appTitleLabel.setMaxWidth(UiScale.size(242));
         appTitleLabel.setTextFill(Color.web(PRIMARY_BLUE));
@@ -163,7 +162,7 @@ public class MainFrame {
         Button exitBtn = new Button("EXIT");
         exitBtn.setMaxWidth(Double.MAX_VALUE);
         exitBtn.setPrefHeight(UiScale.size(56));
-        exitBtn.setFont(UiScale.font("Serif", 20));
+        exitBtn.setFont(UiScale.buttonFont(20));
         String exitDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
         String exitHover = "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
         exitBtn.setStyle(exitDefault);
@@ -198,7 +197,7 @@ public class MainFrame {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
         btn.setPrefHeight(UiScale.size(56));
-        btn.setFont(UiScale.font("Serif", 20));
+        btn.setFont(UiScale.buttonFont(20));
         btn.setStyle(INACTIVE_STYLE);
         btn.setOnMouseEntered(e -> {
             if (!btn.getStyle().equals(ACTIVE_STYLE)) {
@@ -247,12 +246,12 @@ public class MainFrame {
         });
 
         Label title = new Label("Error");
-        title.setFont(Font.font("Serif", 38));
+        title.setFont(UiScale.headingFont(38));
         title.setTextFill(Color.web("#D32F2F"));
         VBox.setMargin(title, new Insets(-8, 0, 0, 0));
 
         Label description = new Label(message);
-        description.setFont(Font.font("Serif", 15));
+        description.setFont(UiScale.bodyFont(15));
         description.setTextFill(Color.web("#2a548f"));
         description.setWrapText(true);
         description.setMaxWidth(300);
@@ -321,12 +320,12 @@ public class MainFrame {
         });
 
         Label title = new Label("Success");
-        title.setFont(Font.font("Serif", 38));
+        title.setFont(UiScale.headingFont(38));
         title.setTextFill(Color.web("#b3ffae"));
         VBox.setMargin(title, new Insets(-8, 0, 0, 0));
 
         Label description = new Label(message);
-        description.setFont(Font.font("Serif", 15));
+        description.setFont(UiScale.bodyFont(15));
         description.setTextFill(Color.web("#2a548f"));
         description.setWrapText(true);
         description.setMaxWidth(300);
@@ -429,7 +428,7 @@ public class MainFrame {
         indicator.setPrefSize(56, 56);
 
         Label message = new Label(loadingMessage);
-        message.setFont(Font.font("Serif", 17));
+        message.setFont(UiScale.bodyFont(17));
         message.setTextFill(Color.web(PRIMARY_BLUE));
         message.setWrapText(true);
         message.setAlignment(Pos.CENTER);
@@ -444,3 +443,4 @@ public class MainFrame {
     }
 
 }
+

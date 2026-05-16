@@ -69,7 +69,7 @@ public class CardDetailPanel {
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(UiScale.font("Serif", 38));
+        title.setFont(UiScale.titleFont(38));
         title.setWrapText(true);
         title.setMaxWidth(UiScale.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
@@ -94,14 +94,14 @@ public class CardDetailPanel {
         Button editBtn = new Button("Edit");
         editBtn.setMaxWidth(Double.MAX_VALUE);
         editBtn.setPrefHeight(UiScale.size(56));
-        editBtn.setFont(UiScale.font("Serif", 20));
+        editBtn.setFont(UiScale.buttonFont(20));
         editBtn.setStyle(editIdleStyle);
 
         // ── DELETE button ─────────────────────────────────────────────────────
         Button deleteBtn = new Button("DELETE");
         deleteBtn.setMaxWidth(Double.MAX_VALUE);
         deleteBtn.setPrefHeight(UiScale.size(56));
-        deleteBtn.setFont(UiScale.font("Serif", 20));
+        deleteBtn.setFont(UiScale.buttonFont(20));
         deleteBtn.setVisible(false);
         deleteBtn.setManaged(false);
         deleteBtn.setStyle(
@@ -113,7 +113,7 @@ public class CardDetailPanel {
         Button saveBtn = new Button("Save Changes");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
         saveBtn.setPrefHeight(UiScale.size(56));
-        saveBtn.setFont(UiScale.font("Serif", 20));
+        saveBtn.setFont(UiScale.buttonFont(20));
         saveBtn.setVisible(false);
         saveBtn.setManaged(false);
         saveBtn.setStyle(
@@ -137,7 +137,7 @@ public class CardDetailPanel {
         Button backBtn = new Button("BACK");
         backBtn.setMaxWidth(Double.MAX_VALUE);
         backBtn.setPrefHeight(UiScale.size(56));
-        backBtn.setFont(UiScale.font("Serif", 20));
+        backBtn.setFont(UiScale.buttonFont(20));
         backBtn.setStyle(backDefault);
         backBtn.setOnMouseEntered(ev -> backBtn.setStyle(backHover));
         backBtn.setOnMouseExited(ev  -> backBtn.setStyle(backDefault));
@@ -171,7 +171,7 @@ public class CardDetailPanel {
                       + " -fx-background-color: transparent;");
 
             diffField.setStyle(
-                    "-fx-font-size: 18px; -fx-font-family: Serif;"
+                    "-fx-font-size: 18px; -fx-font-family: 'Segoe UI';"
                     + " -fx-background-color: " + (on ? "#f0f4ff" : "transparent") + ";"
                     + " -fx-border-color: " + (on ? PRIMARY_BLUE : "transparent") + ";"
                     + " -fx-border-radius: 3;");
@@ -227,12 +227,12 @@ public class CardDetailPanel {
                 + " -fx-background-radius: 15; -fx-padding: 10;");
 
         Label questionLabel = new Label("Question:");
-        questionLabel.setFont(Font.font("Serif", 16));
+        questionLabel.setFont(UiScale.headingFont(16));
         questionLabel.setTextFill(Color.WHITE);
 
         questionArea.setMaxWidth(Double.MAX_VALUE);
         questionArea.setWrapText(true);
-        questionArea.setFont(Font.font("Serif", 26));
+        questionArea.setFont(UiScale.bodyFont(26));
         questionArea.setStyle(
                 "-fx-control-inner-background: " + HEADER_BLUE + ";"
                 + " -fx-text-fill: white;"
@@ -249,11 +249,11 @@ public class CardDetailPanel {
         answerSection.setPadding(new Insets(10));
 
         Label answerLabel = new Label("Answer:");
-        answerLabel.setFont(Font.font("Serif", 16));
+        answerLabel.setFont(UiScale.headingFont(16));
 
         answerArea.setMaxWidth(Double.MAX_VALUE);
         answerArea.setWrapText(true);
-        answerArea.setFont(Font.font("Serif", 22));
+        answerArea.setFont(UiScale.bodyFont(22));
         answerArea.setStyle(
                 "-fx-control-inner-background: white;"
                 + " -fx-border-color: transparent;"
@@ -272,10 +272,10 @@ public class CardDetailPanel {
 
         // Difficulty row: static label + editable TextField side by side
         Label diffLabel = infoLabel("Difficulty: ");
-        diffField.setFont(Font.font("Serif", 21));
+        diffField.setFont(UiScale.bodyFont(21));
         diffField.setPrefWidth(150);
         diffField.setStyle(
-                "-fx-font-size: 18px; -fx-font-family: Serif;"
+                "-fx-font-size: 18px; -fx-font-family: 'Segoe UI';"
                 + " -fx-background-color: transparent;"
                 + " -fx-border-color: transparent;");
 
@@ -344,17 +344,17 @@ public class CardDetailPanel {
         });
 
         Label title = new Label("Delete\nCard?");
-        title.setFont(Font.font("Serif", 41));
+        title.setFont(UiScale.headingFont(41));
         title.setTextFill(Color.web("#2a548f"));
 
         Label description = new Label("This will permanently delete this card and all records of its history. Are you sure you want to delete this card?");
-        description.setFont(Font.font("Serif", 15));
+        description.setFont(UiScale.bodyFont(15));
         description.setTextFill(Color.web("#2a548f"));
         description.setWrapText(true);
         VBox.setMargin(description, new Insets(20, 20, 35, 0));
 
         Label errorLabel = new Label();
-        errorLabel.setFont(Font.font("Serif", 13));
+        errorLabel.setFont(UiScale.bodyFont(13));
         errorLabel.setTextFill(Color.web("#c0392b"));
         errorLabel.setWrapText(true);
         errorLabel.setVisible(false);
@@ -464,7 +464,8 @@ public class CardDetailPanel {
     
     private static Label infoLabel(String text) {
         Label lbl = new Label(text);
-        lbl.setFont(Font.font("Serif", 21));
+        lbl.setFont(UiScale.bodyFont(21));
         return lbl;
     }
 }
+

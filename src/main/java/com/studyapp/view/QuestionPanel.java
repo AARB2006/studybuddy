@@ -15,7 +15,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 
 public class QuestionPanel {
 
@@ -33,7 +32,7 @@ public class QuestionPanel {
 
         // ── header ────────────────────────────────────────────────────────────
         Label header = new Label(deck.getName());
-        header.setFont(UiScale.font("Serif", 52));
+        header.setFont(UiScale.titleFont(52));
         header.setTextFill(Color.WHITE);
         header.setMaxWidth(Double.MAX_VALUE);
         header.setAlignment(Pos.CENTER);
@@ -45,7 +44,7 @@ public class QuestionPanel {
 
         // ── question ──────────────────────────────────────────────────────────
         Label questionBox = new Label("Q: " + card.getQuestion());
-        questionBox.setFont(UiScale.font("Serif", 28));
+        questionBox.setFont(UiScale.bodyFont(28));
         questionBox.setWrapText(true);
         questionBox.setMinHeight(UiScale.size(150));
         questionBox.setAlignment(Pos.TOP_LEFT);
@@ -59,18 +58,18 @@ public class QuestionPanel {
 
         // ── answer input ──────────────────────────────────────────────────────
         Label prompt = new Label("Enter Answer:");
-        prompt.setFont(UiScale.font("Serif", 24));
+        prompt.setFont(UiScale.headingFont(24));
 
         TextArea answerInput = new TextArea();
         answerInput.setMaxWidth(Double.MAX_VALUE);
         answerInput.setPrefHeight(UiScale.size(170));
         answerInput.setWrapText(true);
-        answerInput.setFont(UiScale.font("Serif", 32));
+        answerInput.setFont(UiScale.bodyFont(32));
         answerInput.setStyle(
                 "-fx-border-color: " + StudyPanel.PRIMARY_BLUE +
                         "; -fx-border-radius: 5; -fx-background-radius: 5;" +
                         " -fx-focus-color: transparent;" +
-                        " -fx-font-size: 32px;"
+                        " " + UiScale.uiFontCss(32)
         );
 
         // Ctrl+Enter to submit without leaving the text area
@@ -95,11 +94,11 @@ public class QuestionPanel {
                 + "; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 12 18;");
 
         Label positionLabel = new Label("Card " + cardNumber + " of " + totalCards);
-        positionLabel.setFont(UiScale.font("Serif", 22));
+        positionLabel.setFont(UiScale.bodyFont(22));
         positionLabel.setTextFill(Color.web(StudyPanel.PRIMARY_BLUE));
 
         Label difficultyLabel = new Label("Difficulty: " + card.getDifficulty());
-        difficultyLabel.setFont(UiScale.font("Serif", 22));
+        difficultyLabel.setFont(UiScale.bodyFont(22));
         difficultyLabel.setTextFill(Color.web(StudyPanel.PRIMARY_BLUE));
 
         cardInfo.getChildren().addAll(positionLabel, difficultyLabel);
@@ -108,12 +107,13 @@ public class QuestionPanel {
         Button submitBtn = new Button("SUBMIT");
         submitBtn.setPrefWidth(UiScale.size(190));
         submitBtn.setPrefHeight(UiScale.size(56));
+        submitBtn.setFont(UiScale.buttonFont(20));
         String submitDefault = "-fx-background-color: #e6eaf5; -fx-border-color: "
                 + StudyPanel.PRIMARY_BLUE + "; -fx-border-radius: 8;"
-                + " -fx-cursor: hand; -fx-font-size: 20px; -fx-font-weight: bold;";
+                + " -fx-cursor: hand; " + UiScale.buttonFontCss(20);
         String submitHover = "-fx-background-color: #c9d4ef; -fx-border-color: "
                 + StudyPanel.PRIMARY_BLUE + "; -fx-border-radius: 8;"
-                + " -fx-cursor: hand; -fx-font-size: 20px; -fx-font-weight: bold;";
+                + " -fx-cursor: hand; " + UiScale.buttonFontCss(20);
         submitBtn.setStyle(submitDefault);
         submitBtn.setOnMouseEntered(e -> submitBtn.setStyle(submitHover));
         submitBtn.setOnMouseExited(e  -> submitBtn.setStyle(submitDefault));
@@ -129,3 +129,4 @@ public class QuestionPanel {
         return wrapper;
     }
 }
+

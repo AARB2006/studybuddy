@@ -21,8 +21,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeLineCap;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -289,7 +287,7 @@ public class StudyPanel {
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(UiScale.font("Serif", 38));
+        title.setFont(UiScale.titleFont(38));
         title.setWrapText(true);
         title.setMaxWidth(UiScale.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
@@ -319,7 +317,7 @@ public class StudyPanel {
         progressArc.setStrokeLineCap(StrokeLineCap.ROUND);
 
         pctLabel = new Label("0%");
-        pctLabel.setFont(UiScale.font("Serif", FontWeight.BOLD, 34));
+        pctLabel.setFont(UiScale.emphasisFont(34));
         pctLabel.setTextFill(Color.web(PRIMARY_BLUE));
         pctLabel.setTranslateY(8);
 
@@ -331,8 +329,8 @@ public class StudyPanel {
         stats.setAlignment(Pos.CENTER_LEFT);
         correctLbl  = new Label("Correct: 0");
         attemptsLbl = new Label("Attempts: 0");
-        correctLbl.setFont(UiScale.font("Serif", FontWeight.BOLD, 24));
-        attemptsLbl.setFont(UiScale.font("Serif", FontWeight.BOLD, 24));
+        correctLbl.setFont(UiScale.emphasisFont(24));
+        attemptsLbl.setFont(UiScale.emphasisFont(24));
         correctLbl.setTextFill(Color.web(PRIMARY_BLUE));
         attemptsLbl.setTextFill(Color.web(PRIMARY_BLUE));
         stats.getChildren().addAll(correctLbl, attemptsLbl);
@@ -344,7 +342,7 @@ public class StudyPanel {
         Button leaveBtn = new Button("LEAVE");
         leaveBtn.setMaxWidth(Double.MAX_VALUE);
         leaveBtn.setPrefHeight(UiScale.size(56));
-        leaveBtn.setFont(UiScale.font("Serif", 20));
+        leaveBtn.setFont(UiScale.buttonFont(20));
         String leaveDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: "
                 + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
                 + " -fx-padding: 14 18; -fx-cursor: hand;";
@@ -391,12 +389,12 @@ public class StudyPanel {
         });
 
         Label title = new Label("Session Complete!");
-        title.setFont(Font.font("Serif", 38));
+        title.setFont(UiScale.headingFont(38));
         title.setTextFill(Color.web("#b3ffae"));
         VBox.setMargin(title, new Insets(-8, 0, 0, 0));
 
         Label description = new Label("Score: " + totalCorrect + "/" + flashcards.size() + "\nGreat work!");
-        description.setFont(Font.font("Serif", 15));
+        description.setFont(UiScale.bodyFont(15));
         description.setTextFill(Color.web("#2a548f"));
         description.setWrapText(true);
         description.setMaxWidth(300);
@@ -442,3 +440,4 @@ public class StudyPanel {
         dialog.show();
     }
 }
+

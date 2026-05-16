@@ -125,7 +125,7 @@ public class DeckDetailPanel {
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(UiScale.font("Serif", 38));
+        title.setFont(UiScale.titleFont(38));
         title.setWrapText(true);
         title.setMaxWidth(UiScale.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
@@ -149,7 +149,7 @@ public class DeckDetailPanel {
         Button deleteBtn = new Button("DELETE");
         deleteBtn.setMaxWidth(Double.MAX_VALUE);
         deleteBtn.setPrefHeight(UiScale.size(56));
-        deleteBtn.setFont(UiScale.font("Serif", 20));
+        deleteBtn.setFont(UiScale.buttonFont(20));
         String deleteDefault = "-fx-background-color: white; -fx-text-fill: #cc0000;"
                 + " -fx-border-color: #cc0000; -fx-border-radius: 7; -fx-background-radius: 7;"
                 + " -fx-padding: 14 18; -fx-cursor: hand;";
@@ -164,7 +164,7 @@ public class DeckDetailPanel {
         Button backBtn = new Button("BACK");
         backBtn.setMaxWidth(Double.MAX_VALUE);
         backBtn.setPrefHeight(UiScale.size(56));
-        backBtn.setFont(UiScale.font("Serif", 20));
+        backBtn.setFont(UiScale.buttonFont(20));
         String backDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: "
                 + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
                 + " -fx-padding: 14 18; -fx-cursor: hand;";
@@ -184,7 +184,7 @@ public class DeckDetailPanel {
             Button saveBtn = new Button("SAVE CHANGES");
             saveBtn.setMaxWidth(Double.MAX_VALUE);
             saveBtn.setPrefHeight(UiScale.size(56));
-            saveBtn.setFont(UiScale.font("Serif", 20));
+            saveBtn.setFont(UiScale.buttonFont(20));
             String saveDefault = "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: green;"
                     + " -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
             String saveHover = "-fx-background-color: #e6f7e6; -fx-text-fill: black; -fx-border-color: green;"
@@ -283,7 +283,7 @@ public class DeckDetailPanel {
         VBox rightInfo = new VBox(8);
         HBox.setHgrow(rightInfo, Priority.ALWAYS);
         Label descTitle = new Label("Description:");
-        descTitle.setFont(UiScale.font("Serif", 26));
+        descTitle.setFont(UiScale.headingFont(26));
         rightInfo.getChildren().addAll(descTitle, descriptionArea);
 
         infoBox.getChildren().addAll(leftInfo, rightInfo);
@@ -291,7 +291,7 @@ public class DeckDetailPanel {
         Button studyBtn = new Button("START STUDY");
         studyBtn.setMaxWidth(Double.MAX_VALUE);
         studyBtn.setPrefHeight(UiScale.size(60));
-        studyBtn.setFont(UiScale.font("Serif", 24));
+        studyBtn.setFont(UiScale.buttonFont(24));
         String studyDefault = "-fx-background-color: " + HEADER_BLUE + "; -fx-text-fill: white;"
                 + " -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8;"
                 + " -fx-padding: 12 15; -fx-cursor: hand; -fx-font-weight: bold;";
@@ -302,11 +302,12 @@ public class DeckDetailPanel {
         studyBtn.setOnMouseEntered(e -> studyBtn.setStyle(studyHover));
         studyBtn.setOnMouseExited(e -> studyBtn.setStyle(studyDefault));
         studyBtn.setOnAction(e -> StudyPanel.create(mainLayout, deckData, mc, originalSidebar, returnAction));
+        VBox.setMargin(studyBtn, new Insets(10, 0, 0, 0));
 
         VBox progressSection = new VBox(8);
         progressSection.setPadding(new Insets(10, 0, 0, 0));
         Label progressTitle = new Label("Progress:");
-        progressTitle.setFont(UiScale.font("Serif", 28));
+        progressTitle.setFont(UiScale.headingFont(28));
         progressTitle.setTextFill(Color.web(PRIMARY_BLUE));
 
         ProgressBar bar = new ProgressBar(mc.getDeckProgress(deckData.getDeckID()) / 100.0);
@@ -315,7 +316,7 @@ public class DeckDetailPanel {
         bar.setStyle("-fx-accent: " + HEADER_BLUE + ";");
 
         Label pctLbl = new Label(mc.getDeckProgress(deckData.getDeckID()) + "% complete");
-        pctLbl.setFont(UiScale.font("Serif Bold", 22));
+        pctLbl.setFont(UiScale.emphasisFont(22));
         pctLbl.setTextFill(Color.web(PRIMARY_BLUE));
 
         HBox progressHeader = new HBox();
@@ -329,7 +330,7 @@ public class DeckDetailPanel {
         previewSection.setPadding(new Insets(4, 0, 0, 0));
         VBox.setVgrow(previewSection, Priority.ALWAYS);
         Label previewHeader = new Label("Cards Preview");
-        previewHeader.setFont(UiScale.font("Serif", 34));
+        previewHeader.setFont(UiScale.headingFont(34));
         previewHeader.setTextFill(Color.web(PRIMARY_BLUE));
         previewHeader.setMaxWidth(Double.MAX_VALUE);
         previewHeader.setAlignment(Pos.CENTER);
@@ -346,13 +347,13 @@ public class DeckDetailPanel {
         List<Flashcard> preview = mc.getFlashcardsByDeck(deckData.getDeckID());
         if (preview.isEmpty()) {
             Label empty = new Label("No cards in this deck yet.");
-            empty.setFont(Font.font("Serif", 14));
+            empty.setFont(UiScale.bodyFont(14));
             empty.setTextFill(Color.web("#6b7280"));
             previewSection.getChildren().addAll(previewHeader, empty);
         } else {
             for (int i = 0; i < Math.min(4, preview.size()); i++) {
                 Label qLbl = new Label("Q. " + preview.get(i).getQuestion());
-                qLbl.setFont(UiScale.font("Serif", 18));
+                qLbl.setFont(UiScale.bodyFont(18));
                 qLbl.setWrapText(true);
                 qLbl.setMaxWidth(Double.MAX_VALUE);
                 qLbl.setMinHeight(UiScale.size(64));
@@ -371,7 +372,7 @@ public class DeckDetailPanel {
 
     private static Label infoLabel(String text) {
         Label lbl = new Label(text);
-        lbl.setFont(Font.font("Serif", 18));
+        lbl.setFont(UiScale.bodyFont(18));
         lbl.setWrapText(true);
         lbl.setMaxWidth(Double.MAX_VALUE);
         return lbl;
@@ -381,7 +382,7 @@ public class DeckDetailPanel {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
         btn.setPrefHeight(UiScale.size(56));
-        btn.setFont(UiScale.font("Serif", 20));
+        btn.setFont(UiScale.buttonFont(20));
         btn.setStyle(INACTIVE_STYLE);
         btn.setOnMouseEntered(e -> {
             if (!btn.getStyle().equals(ACTIVE_STYLE)) {
@@ -427,17 +428,17 @@ public class DeckDetailPanel {
         });
 
         Label title = new Label("Delete\nDeck?");
-        title.setFont(Font.font("Serif", 41));
+        title.setFont(UiScale.headingFont(41));
         title.setTextFill(Color.web("#2a548f"));
 
         Label description = new Label("This will also delete cards within this deck, are you sure?");
-        description.setFont(Font.font("Serif", 15));
+        description.setFont(UiScale.bodyFont(15));
         description.setTextFill(Color.web("#2a548f"));
         description.setWrapText(true);
         VBox.setMargin(description, new Insets(20, 20, 35, 0));
 
         Label errorLabel = new Label();
-        errorLabel.setFont(Font.font("Serif", 13));
+        errorLabel.setFont(UiScale.bodyFont(13));
         errorLabel.setTextFill(Color.web("#c0392b"));
         errorLabel.setWrapText(true);
         errorLabel.setVisible(false);
@@ -516,10 +517,12 @@ public class DeckDetailPanel {
 
     private static TextField buildHeaderField(String deckName, boolean editMode) {
         TextField field = new TextField(deckName == null ? "" : deckName);
-        field.setFont(UiScale.font("Serif", 32));
+        field.setFont(UiScale.titleFont(64));
         field.setEditable(editMode);
         field.setFocusTraversable(editMode);
         field.setMaxWidth(Double.MAX_VALUE);
+        field.setMinHeight(UiScale.size(100));
+        field.setPrefHeight(UiScale.size(100));
         field.setAlignment(Pos.CENTER);
         if (editMode) {
             field.setStyle("-fx-background-color: #d8e4f5; -fx-background-radius: 8; "
@@ -539,7 +542,7 @@ public class DeckDetailPanel {
                 : (rawDescription.isBlank() ? "No description." : rawDescription);
 
         TextArea area = new TextArea(text);
-        area.setFont(UiScale.font("Serif", 24));
+        area.setFont(UiScale.bodyFont(24));
         area.setWrapText(true);
         area.setEditable(editMode);
         area.setFocusTraversable(editMode);
@@ -551,11 +554,11 @@ public class DeckDetailPanel {
         VBox.setVgrow(area, Priority.NEVER);
         if (editMode) {
             area.setPromptText("Description (optional)");
-            area.setStyle("-fx-control-inner-background: #f0f4ff; -fx-text-fill: #111827; -fx-font-size: 24px; "
+            area.setStyle("-fx-control-inner-background: #f0f4ff; -fx-text-fill: #111827; " + UiScale.uiFontCss(24) + " "
                     + "-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-width: 2; -fx-border-radius: 6; "
                     + "-fx-background-radius: 6; -fx-padding: 8;");
         } else {
-            area.setStyle("-fx-text-fill: #2a548f; -fx-font-size: 24px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent; "
+            area.setStyle("-fx-text-fill: #2a548f; " + UiScale.uiFontCss(24) + " -fx-focus-color: transparent; -fx-faint-focus-color: transparent; "
                     + "-fx-control-inner-background: white; -fx-background-color: white; -fx-background-radius: 6; "
                     + "-fx-border-color: #d7e2f3; -fx-border-radius: 6; -fx-padding: 8;");
         }
@@ -570,3 +573,4 @@ public class DeckDetailPanel {
         return trimmed.isEmpty() ? null : trimmed;
     }
 }
+

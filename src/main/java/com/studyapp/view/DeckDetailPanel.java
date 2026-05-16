@@ -39,9 +39,11 @@ public class DeckDetailPanel {
     private static final String HEADER_BLUE = "#41729f";
     private static final String BORDER_STYLE = "-fx-border-color: " + PRIMARY_BLUE
             + "; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;";
-    private static final String ACTIVE_STYLE = "-fx-background-color: #e6eaf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
-    private static final String INACTIVE_STYLE = "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
-    private static final String HOVER_STYLE = "-fx-background-color: #f0f4f8; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+    private static final String SOFT_PANEL_STYLE = "-fx-border-color: " + PRIMARY_BLUE
+            + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-background-color: #f8fbff;";
+    private static final String ACTIVE_STYLE = "-fx-background-color: #e6eaf5; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
+    private static final String INACTIVE_STYLE = "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
+    private static final String HOVER_STYLE = "-fx-background-color: #f0f4f8; -fx-text-fill: black; -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
 
     private static double delXOffset = 0;
     private static double delYOffset = 0;
@@ -87,7 +89,14 @@ public class DeckDetailPanel {
                 editMode,
                 headerField,
                 descriptionArea));
-        mainLayout.setCenter(buildContent(deckData, mc, headerField, descriptionArea));
+        mainLayout.setCenter(buildContent(
+                mainLayout,
+                deckData,
+                mc,
+                headerField,
+                descriptionArea,
+                originalSidebar,
+                returnAction));
 
         if (editMode) {
             Platform.runLater(() -> {
@@ -106,20 +115,22 @@ public class DeckDetailPanel {
             boolean editMode,
             TextField headerField,
             TextArea descriptionArea) {
-        VBox sidebar = new VBox(15);
-        sidebar.setPadding(new Insets(20));
-        sidebar.setPrefWidth(250);
-        sidebar.setMinWidth(250);
-        sidebar.setMaxWidth(250);
+        VBox sidebar = new VBox(18);
+        sidebar.setPadding(Responsive.insets(20, 24, 20, 24));
+        sidebar.setPrefWidth(Responsive.size(290));
+        sidebar.setMinWidth(Responsive.size(290));
+        sidebar.setMaxWidth(Responsive.size(290));
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(Font.font("Serif", 18));
+        title.setFont(Responsive.font("Serif", 38));
+        title.setWrapText(true);
+        title.setMaxWidth(Responsive.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
         VBox.setMargin(title, new Insets(0, 0, 10, 0));
 
-        VBox buttonBox = new VBox(15);
-        buttonBox.setPadding(new Insets(20));
+        VBox buttonBox = new VBox(18);
+        buttonBox.setPadding(Responsive.insets(24));
         buttonBox.setStyle(BORDER_STYLE);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
@@ -135,13 +146,14 @@ public class DeckDetailPanel {
 
         Button deleteBtn = new Button("DELETE");
         deleteBtn.setMaxWidth(Double.MAX_VALUE);
-        deleteBtn.setFont(Font.font("Serif", 16));
+        deleteBtn.setPrefHeight(Responsive.size(56));
+        deleteBtn.setFont(Responsive.font("Serif", 20));
         String deleteDefault = "-fx-background-color: white; -fx-text-fill: #cc0000;"
-                + " -fx-border-color: #cc0000; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + " -fx-border-color: #cc0000; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         String deleteHover = "-fx-background-color: #f4f4f4; -fx-text-fill: #cc0000;"
-                + " -fx-border-color: #cc0000; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + " -fx-border-color: #cc0000; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         deleteBtn.setStyle(deleteDefault);
         deleteBtn.setOnMouseEntered(ev -> deleteBtn.setStyle(deleteHover));
         deleteBtn.setOnMouseExited(ev -> deleteBtn.setStyle(deleteDefault));
@@ -149,13 +161,14 @@ public class DeckDetailPanel {
 
         Button backBtn = new Button("BACK");
         backBtn.setMaxWidth(Double.MAX_VALUE);
-        backBtn.setFont(Font.font("Serif", 16));
+        backBtn.setPrefHeight(Responsive.size(56));
+        backBtn.setFont(Responsive.font("Serif", 20));
         String backDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         String backHover = "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         backBtn.setStyle(backDefault);
         backBtn.setOnMouseEntered(ev -> backBtn.setStyle(backHover));
         backBtn.setOnMouseExited(ev -> backBtn.setStyle(backDefault));
@@ -168,11 +181,12 @@ public class DeckDetailPanel {
 
             Button saveBtn = new Button("SAVE CHANGES");
             saveBtn.setMaxWidth(Double.MAX_VALUE);
-            saveBtn.setFont(Font.font("Serif", 16));
+            saveBtn.setPrefHeight(Responsive.size(56));
+            saveBtn.setFont(Responsive.font("Serif", 20));
             String saveDefault = "-fx-background-color: white; -fx-text-fill: black; -fx-border-color: green;"
-                    + " -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+                    + " -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
             String saveHover = "-fx-background-color: #e6f7e6; -fx-text-fill: black; -fx-border-color: green;"
-                    + " -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;";
+                    + " -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;";
             saveBtn.setStyle(saveDefault);
             saveBtn.setOnMouseEntered(ev -> saveBtn.setStyle(saveHover));
             saveBtn.setOnMouseExited(ev -> saveBtn.setStyle(saveDefault));
@@ -196,13 +210,11 @@ public class DeckDetailPanel {
             cardsBtn.setOnAction(e -> {
                 cardsBtn.setStyle(ACTIVE_STYLE);
                 activeButton = cardsBtn;
+                backBtn.setOnAction(ev -> render(mainLayout, deckData, mc, returnAction, false, originalSidebar));
                 mainLayout.setCenter(AllCardsPanel.create(mainLayout, deckData, mc));
             });
 
-            Button studyBtn = createNavButton("STUDY");
-            studyBtn.setOnAction(e -> StudyPanel.create(mainLayout, deckData, mc, originalSidebar, returnAction));
-
-            buttonBox.getChildren().addAll(editBtn, cardsBtn, studyBtn, spacer, deleteBtn, backBtn);
+            buttonBox.getChildren().addAll(cardsBtn, editBtn, spacer, backBtn);
         }
 
         sidebar.getChildren().addAll(title, buttonBox);
@@ -228,55 +240,95 @@ public class DeckDetailPanel {
         }
     }
 
-    private static VBox buildContent(Deck deckData, MainController mc, TextField headerField, TextArea descriptionArea) {
+    private static VBox buildContent(
+            BorderPane mainLayout,
+            Deck deckData,
+            MainController mc,
+            TextField headerField,
+            TextArea descriptionArea,
+            Node originalSidebar,
+            Runnable returnAction) {
         VBox wrapper = new VBox();
-        wrapper.setPadding(new Insets(20));
+        wrapper.setPadding(new Insets(12));
         wrapper.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(wrapper, Priority.ALWAYS);
 
-        VBox mainContent = new VBox(20);
-        mainContent.setPadding(new Insets(20));
+        VBox mainContent = new VBox(14);
+        mainContent.setPadding(new Insets(14));
         mainContent.setStyle(BORDER_STYLE);
+        mainContent.setMaxWidth(Double.MAX_VALUE);
+        mainContent.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(mainContent, Priority.ALWAYS);
 
-        HBox infoBox = new HBox(40);
-        infoBox.setPadding(new Insets(15));
-        infoBox.setStyle(BORDER_STYLE);
+        HBox infoBox = new HBox(20);
+        infoBox.setPadding(new Insets(14));
+        infoBox.setAlignment(Pos.TOP_LEFT);
+        infoBox.setMaxHeight(170);
+        infoBox.setStyle(SOFT_PANEL_STYLE);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        VBox leftInfo = new VBox(6);
+        VBox leftInfo = new VBox(10);
+        leftInfo.setPadding(new Insets(12));
+        leftInfo.setPrefWidth(Responsive.size(300));
+        leftInfo.setMinWidth(Responsive.size(280));
+        leftInfo.setStyle("-fx-border-color: #d7e2f3; -fx-border-radius: 6; -fx-background-radius: 6; -fx-background-color: white;");
         leftInfo.getChildren().addAll(
                 infoLabel("ID: " + deckData.getDeckID()),
                 infoLabel("Cards: " + mc.getFlashcardsByDeck(deckData.getDeckID()).size()),
                 infoLabel("Created at: " + deckData.getCreatedAt().format(fmt)));
 
-        VBox rightInfo = new VBox(6);
+        VBox rightInfo = new VBox(8);
+        HBox.setHgrow(rightInfo, Priority.ALWAYS);
         Label descTitle = new Label("Description:");
-        descTitle.setFont(Font.font("Serif", 14));
+        descTitle.setFont(Responsive.font("Serif", 26));
         rightInfo.getChildren().addAll(descTitle, descriptionArea);
 
         infoBox.getChildren().addAll(leftInfo, rightInfo);
 
-        VBox progressSection = new VBox(10);
+        Button studyBtn = new Button("START STUDY");
+        studyBtn.setMaxWidth(Double.MAX_VALUE);
+        studyBtn.setPrefHeight(Responsive.size(60));
+        studyBtn.setFont(Responsive.font("Serif", 24));
+        String studyDefault = "-fx-background-color: " + HEADER_BLUE + "; -fx-text-fill: white;"
+                + " -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8;"
+                + " -fx-padding: 12 15; -fx-cursor: hand; -fx-font-weight: bold;";
+        String studyHover = "-fx-background-color: " + PRIMARY_BLUE + "; -fx-text-fill: white;"
+                + " -fx-border-color: " + PRIMARY_BLUE + "; -fx-border-radius: 8; -fx-background-radius: 8;"
+                + " -fx-padding: 12 15; -fx-cursor: hand; -fx-font-weight: bold;";
+        studyBtn.setStyle(studyDefault);
+        studyBtn.setOnMouseEntered(e -> studyBtn.setStyle(studyHover));
+        studyBtn.setOnMouseExited(e -> studyBtn.setStyle(studyDefault));
+        studyBtn.setOnAction(e -> StudyPanel.create(mainLayout, deckData, mc, originalSidebar, returnAction));
+
+        VBox progressSection = new VBox(8);
+        progressSection.setPadding(new Insets(10, 0, 0, 0));
         Label progressTitle = new Label("Progress:");
-        progressTitle.setFont(Font.font("Serif", 16));
+        progressTitle.setFont(Responsive.font("Serif", 28));
+        progressTitle.setTextFill(Color.web(PRIMARY_BLUE));
 
         ProgressBar bar = new ProgressBar(mc.getDeckProgress(deckData.getDeckID()) / 100.0);
         bar.setMaxWidth(Double.MAX_VALUE);
-        bar.setPrefHeight(36);
+        bar.setPrefHeight(Responsive.size(42));
         bar.setStyle("-fx-accent: " + HEADER_BLUE + ";");
 
-        Label pctLbl = new Label(mc.getDeckProgress(deckData.getDeckID()) + "%");
-        pctLbl.setFont(Font.font("Serif Bold", 16));
-        pctLbl.setTextFill(Color.WHITE);
+        Label pctLbl = new Label(mc.getDeckProgress(deckData.getDeckID()) + "% complete");
+        pctLbl.setFont(Responsive.font("Serif Bold", 22));
+        pctLbl.setTextFill(Color.web(PRIMARY_BLUE));
 
-        StackPane progressStack = new StackPane(bar, pctLbl);
-        progressSection.getChildren().addAll(progressTitle, progressStack);
+        HBox progressHeader = new HBox();
+        progressHeader.setAlignment(Pos.CENTER_LEFT);
+        Region progressSpacer = new Region();
+        HBox.setHgrow(progressSpacer, Priority.ALWAYS);
+        progressHeader.getChildren().addAll(progressTitle, progressSpacer, pctLbl);
+        progressSection.getChildren().addAll(progressHeader, bar);
 
-        VBox previewSection = new VBox(15);
+        VBox previewSection = new VBox(12);
+        previewSection.setPadding(new Insets(4, 0, 0, 0));
+        VBox.setVgrow(previewSection, Priority.ALWAYS);
         Label previewHeader = new Label("Cards Preview");
-        previewHeader.setFont(Font.font("Serif", 20));
+        previewHeader.setFont(Responsive.font("Serif", 34));
+        previewHeader.setTextFill(Color.web(PRIMARY_BLUE));
         previewHeader.setMaxWidth(Double.MAX_VALUE);
         previewHeader.setAlignment(Pos.CENTER);
 
@@ -298,10 +350,11 @@ public class DeckDetailPanel {
         } else {
             for (int i = 0; i < Math.min(4, preview.size()); i++) {
                 Label qLbl = new Label("Q. " + preview.get(i).getQuestion());
-                qLbl.setFont(Font.font("Serif", 14));
+                qLbl.setFont(Responsive.font("Serif", 18));
                 qLbl.setWrapText(true);
                 qLbl.setMaxWidth(Double.MAX_VALUE);
-                qLbl.setPadding(new Insets(12));
+                qLbl.setMinHeight(Responsive.size(64));
+                qLbl.setPadding(Responsive.insets(14));
                 qLbl.setStyle("-fx-border-color: " + PRIMARY_BLUE
                         + "; -fx-border-radius: 5; -fx-background-color: white;");
                 grid.add(qLbl, i % 2, i / 2);
@@ -309,21 +362,24 @@ public class DeckDetailPanel {
             previewSection.getChildren().addAll(previewHeader, grid);
         }
 
-        mainContent.getChildren().addAll(headerField, infoBox, progressSection, previewSection);
+        mainContent.getChildren().addAll(headerField, infoBox, studyBtn, progressSection, previewSection);
         wrapper.getChildren().add(mainContent);
         return wrapper;
     }
 
     private static Label infoLabel(String text) {
         Label lbl = new Label(text);
-        lbl.setFont(Font.font("Serif", 14));
+        lbl.setFont(Font.font("Serif", 18));
+        lbl.setWrapText(true);
+        lbl.setMaxWidth(Double.MAX_VALUE);
         return lbl;
     }
 
     private static Button createNavButton(String text) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setFont(Font.font("Serif", 16));
+        btn.setPrefHeight(Responsive.size(56));
+        btn.setFont(Responsive.font("Serif", 20));
         btn.setStyle(INACTIVE_STYLE);
         btn.setOnMouseEntered(e -> {
             if (!btn.getStyle().equals(ACTIVE_STYLE)) {
@@ -337,7 +393,6 @@ public class DeckDetailPanel {
         });
         return btn;
     }
-
 
     private static void showDeleteDeckDialog(
             BorderPane mainLayout,
@@ -459,7 +514,7 @@ public class DeckDetailPanel {
 
     private static TextField buildHeaderField(String deckName, boolean editMode) {
         TextField field = new TextField(deckName == null ? "" : deckName);
-        field.setFont(Font.font("Serif", 32));
+        field.setFont(Responsive.font("Serif", 32));
         field.setEditable(editMode);
         field.setFocusTraversable(editMode);
         field.setMaxWidth(Double.MAX_VALUE);
@@ -482,18 +537,25 @@ public class DeckDetailPanel {
                 : (rawDescription.isBlank() ? "No description." : rawDescription);
 
         TextArea area = new TextArea(text);
-        area.setFont(Font.font("Serif", 14));
+        area.setFont(Responsive.font("Serif", 24));
         area.setWrapText(true);
         area.setEditable(editMode);
         area.setFocusTraversable(editMode);
+        area.setPrefRowCount(3);
+        area.setMinHeight(Responsive.size(84));
+        area.setPrefHeight(Responsive.size(104));
+        area.setMaxHeight(118);
+        area.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(area, Priority.NEVER);
         if (editMode) {
             area.setPromptText("Description (optional)");
-            area.setStyle("-fx-control-inner-background: #f0f4ff; -fx-text-fill: #111827; "
+            area.setStyle("-fx-control-inner-background: #f0f4ff; -fx-text-fill: #111827; -fx-font-size: 24px; "
                     + "-fx-border-color: " + PRIMARY_BLUE + "; -fx-border-width: 2; -fx-border-radius: 6; "
                     + "-fx-background-radius: 6; -fx-padding: 8;");
         } else {
-            area.setStyle("-fx-text-fill: #475569; -fx-focus-color: transparent; -fx-faint-focus-color: transparent; "
-                    + "-fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 5;");
+            area.setStyle("-fx-text-fill: #2a548f; -fx-font-size: 24px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent; "
+                    + "-fx-control-inner-background: white; -fx-background-color: white; -fx-background-radius: 6; "
+                    + "-fx-border-color: #d7e2f3; -fx-border-radius: 6; -fx-padding: 8;");
         }
         return area;
     }

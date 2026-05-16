@@ -59,20 +59,22 @@ public class CardDetailPanel {
             TextArea questionArea, TextArea answerArea, TextField diffField,
             Runnable onNavigateBack) {
 
-        VBox sidebar = new VBox(15);
-        sidebar.setPadding(new Insets(20));
-        sidebar.setPrefWidth(250);
-        sidebar.setMinWidth(250);
-        sidebar.setMaxWidth(250);
+        VBox sidebar = new VBox(18);
+        sidebar.setPadding(Responsive.insets(20, 24, 20, 24));
+        sidebar.setPrefWidth(Responsive.size(290));
+        sidebar.setMinWidth(Responsive.size(290));
+        sidebar.setMaxWidth(Responsive.size(290));
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(Font.font("Serif", 18));
+        title.setFont(Responsive.font("Serif", 38));
+        title.setWrapText(true);
+        title.setMaxWidth(Responsive.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
         VBox.setMargin(title, new Insets(0, 0, 10, 0));
 
-        VBox buttonBox = new VBox(15);
-        buttonBox.setPadding(new Insets(20));
+        VBox buttonBox = new VBox(18);
+        buttonBox.setPadding(Responsive.insets(24));
         buttonBox.setStyle(BORDER_STYLE);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
@@ -80,37 +82,42 @@ public class CardDetailPanel {
         final String editIdleStyle =
                 "-fx-background-color: #e6eaf5; -fx-text-fill: black;"
                 + " -fx-border-color: " + PRIMARY_BLUE
-                + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         final String editActiveStyle =
                 "-fx-background-color: " + PRIMARY_BLUE + "; -fx-text-fill: white;"
-                + " -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + " -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
 
         Button editBtn = new Button("Edit");
         editBtn.setMaxWidth(Double.MAX_VALUE);
-        editBtn.setFont(Font.font("Serif", 16));
+        editBtn.setPrefHeight(Responsive.size(56));
+        editBtn.setFont(Responsive.font("Serif", 20));
         editBtn.setStyle(editIdleStyle);
 
         // ── DELETE button ─────────────────────────────────────────────────────
         Button deleteBtn = new Button("DELETE");
         deleteBtn.setMaxWidth(Double.MAX_VALUE);
-        deleteBtn.setFont(Font.font("Serif", 16));
+        deleteBtn.setPrefHeight(Responsive.size(56));
+        deleteBtn.setFont(Responsive.font("Serif", 20));
+        deleteBtn.setVisible(false);
+        deleteBtn.setManaged(false);
         deleteBtn.setStyle(
                 "-fx-background-color: white; -fx-text-fill: #cc0000;"
-                + " -fx-border-color: #cc0000; -fx-border-radius: 5;"
-                + " -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;");
+                + " -fx-border-color: #cc0000; -fx-border-radius: 7;"
+                + " -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;");
 
         // ── Save Changes button (hidden until edit mode is active) ────────────
         Button saveBtn = new Button("Save Changes");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
-        saveBtn.setFont(Font.font("Serif", 16));
+        saveBtn.setPrefHeight(Responsive.size(56));
+        saveBtn.setFont(Responsive.font("Serif", 20));
         saveBtn.setVisible(false);
         saveBtn.setManaged(false);
         saveBtn.setStyle(
                 "-fx-background-color: white; -fx-text-fill: #2d7a2d;"
-                + " -fx-border-color: #2d7a2d; -fx-border-radius: 5;"
-                + " -fx-background-radius: 5; -fx-padding: 10 15; -fx-cursor: hand;");
+                + " -fx-border-color: #2d7a2d; -fx-border-radius: 7;"
+                + " -fx-background-radius: 7; -fx-padding: 14 18; -fx-cursor: hand;");
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -118,16 +125,17 @@ public class CardDetailPanel {
         // ── BACK button ───────────────────────────────────────────────────────
         final String backDefault =
                 "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         final String backHover =
                 "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
 
         Button backBtn = new Button("BACK");
         backBtn.setMaxWidth(Double.MAX_VALUE);
-        backBtn.setFont(Font.font("Serif", 16));
+        backBtn.setPrefHeight(Responsive.size(56));
+        backBtn.setFont(Responsive.font("Serif", 20));
         backBtn.setStyle(backDefault);
         backBtn.setOnMouseEntered(ev -> backBtn.setStyle(backHover));
         backBtn.setOnMouseExited(ev  -> backBtn.setStyle(backDefault));
@@ -169,6 +177,8 @@ public class CardDetailPanel {
             // Show / hide Save Changes
             saveBtn.setVisible(on);
             saveBtn.setManaged(on);
+            deleteBtn.setVisible(on);
+            deleteBtn.setManaged(on);
 
             editBtn.setStyle(on ? editActiveStyle : editIdleStyle);
         });
@@ -188,7 +198,7 @@ public class CardDetailPanel {
 
         deleteBtn.setOnAction(ev -> showDeleteCardDialog(mainLayout, mc, flashcard, savedSidebar, onNavigateBack));
 
-        buttonBox.getChildren().addAll(editBtn, deleteBtn, saveBtn, spacer, backBtn);
+        buttonBox.getChildren().addAll(editBtn, saveBtn, deleteBtn, spacer, backBtn);
         sidebar.getChildren().addAll(title, buttonBox);
         return sidebar;
     }

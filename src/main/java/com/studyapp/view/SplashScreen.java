@@ -43,7 +43,7 @@ public class SplashScreen {
         card.setStrokeWidth(2.5);
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(Font.font("Serif", FontWeight.MEDIUM, 42));
+        title.setFont(Font.font("Serif", FontWeight.MEDIUM, 54));
         title.setTextFill(Color.web(PRIMARY_BLUE));
         title.setAlignment(Pos.CENTER);
         title.setOpacity(0);

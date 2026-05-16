@@ -21,120 +21,142 @@ public class ResultPanel {
     public static VBox build(StudyPanel sp, String result, Flashcard card, String answer, Deck deck) {
         String correctAnswer = card.getAnswer();
         VBox wrapper = new VBox();
-        wrapper.setPadding(new Insets(20));
+        wrapper.setPadding(new Insets(12));
         wrapper.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(wrapper, Priority.ALWAYS);
 
-        VBox resultArea = new VBox(20);
-        resultArea.setPadding(new Insets(20));
+        VBox resultArea = new VBox(16);
+        resultArea.setPadding(new Insets(18));
         resultArea.setStyle(StudyPanel.BORDER_STYLE);
-        resultArea.setAlignment(Pos.CENTER);
+        resultArea.setAlignment(Pos.TOP_CENTER);
         VBox.setVgrow(resultArea, Priority.ALWAYS);
 
-        // ── header ────────────────────────────────────────────────────────────
         Label header = new Label(deck.getName());
-        header.setFont(Font.font("Serif", 32));
+        header.setFont(Responsive.font("Serif", 52));
         header.setTextFill(Color.WHITE);
         header.setMaxWidth(Double.MAX_VALUE);
         header.setAlignment(Pos.CENTER);
         header.setStyle(
                 "-fx-background-color: " + StudyPanel.HEADER_BLUE +
-                        "; -fx-background-radius: 8; -fx-padding: 10;"
+                        "; -fx-background-radius: 8; -fx-padding: 8;"
         );
 
-        // ── question ──────────────────────────────────────────────────────────
         Label questionBox = new Label("Q: " + card.getQuestion());
-        questionBox.setFont(Font.font("Serif", 20));
+        questionBox.setFont(Responsive.font("Serif", 24));
         questionBox.setWrapText(true);
-        questionBox.setMinHeight(150);
+        questionBox.setMinHeight(Responsive.size(130));
         questionBox.setAlignment(Pos.TOP_LEFT);
         questionBox.setMaxWidth(Double.MAX_VALUE);
-        questionBox.setPadding(new Insets(20));
+        questionBox.setPadding(new Insets(14));
         questionBox.setStyle(
                 "-fx-border-color: " + StudyPanel.PRIMARY_BLUE +
                         "; -fx-border-radius: 8; -fx-background-color: #f8fbff;"
         );
 
-        // ── answer input ──────────────────────────────────────────────────────
-        Label prompt = new Label("Enter Answer:");
-        prompt.setFont(Font.font("Serif", 14));
+        Label prompt = new Label("Your Answer:");
+        prompt.setFont(Responsive.font("Serif", 22));
 
-        TextArea answerInput = new TextArea(answer);
+        TextArea answerInput = new TextArea(answer == null ? "" : answer);
         answerInput.setEditable(false);
-        answerInput.setMaxWidth(550);
-        answerInput.setPrefHeight(100);
+        answerInput.setMaxWidth(Responsive.size(860));
+        answerInput.setPrefHeight(Responsive.size(125));
         answerInput.setWrapText(true);
+        answerInput.setFont(Responsive.font("Serif", 32));
         answerInput.setStyle(
                 "-fx-border-color: " + StudyPanel.PRIMARY_BLUE +
                         "; -fx-border-radius: 5; -fx-background-radius: 5;" +
-                        " -fx-focus-color: transparent;"
+                        " -fx-focus-color: transparent;" +
+                        " -fx-font-size: 32px;"
         );
 
-        boolean isCorrectWithTypo = result.equals("CORRECT") && !answer.equals(correctAnswer);
-        Label correctAnswerLabel = null;
-        if (isCorrectWithTypo) {
-            correctAnswerLabel = new Label("✓ Correct answer: " + correctAnswer);
-            correctAnswerLabel.setFont(Font.font("Serif", 14));
-            correctAnswerLabel.setTextFill(Color.web("#2e7d32"));
-            correctAnswerLabel.setWrapText(true);
-            correctAnswerLabel.setMaxWidth(550);
-            correctAnswerLabel.setStyle("-fx-font-style: italic;");
-        }
-
-        VBox answerSection = new VBox(8);
+        VBox answerSection = new VBox(10);
         answerSection.setAlignment(Pos.CENTER);
-        if (isCorrectWithTypo) {
-            answerSection.getChildren().addAll(prompt, answerInput, correctAnswerLabel);
-        } else {
-            answerSection.getChildren().addAll(prompt, answerInput);
+        answerSection.setMaxWidth(Responsive.size(920));
+        answerSection.setStyle("-fx-background-color: #f8fbff; -fx-border-color: " + StudyPanel.PRIMARY_BLUE
+                + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12 18;");
+        answerSection.getChildren().addAll(prompt, answerInput);
+
+        boolean exactMatch = answer != null
+                && correctAnswer != null
+                && answer.trim().equalsIgnoreCase(correctAnswer.trim());
+
+        Label feedbackLabel = new Label(feedbackMessage(result, exactMatch));
+        feedbackLabel.setFont(Responsive.font("Serif", 22));
+        feedbackLabel.setTextFill(Color.web("#334155"));
+        feedbackLabel.setWrapText(true);
+        feedbackLabel.setMaxWidth(Responsive.size(860));
+        answerSection.getChildren().add(feedbackLabel);
+
+        if (!exactMatch) {
+            Label expectedAnswerLabel = new Label("Expected answer: " + correctAnswer);
+            expectedAnswerLabel.setFont(Responsive.font("Serif", 22));
+            expectedAnswerLabel.setTextFill(Color.web("#2a548f"));
+            expectedAnswerLabel.setWrapText(true);
+            expectedAnswerLabel.setMaxWidth(Responsive.size(860));
+            expectedAnswerLabel.setStyle("-fx-font-weight: bold;");
+            answerSection.getChildren().add(expectedAnswerLabel);
         }
 
-        // ── result label — no correct answer revealed if wrong ────────────────
+        Region bottomSpacer = new Region();
+        VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
+
         Label resultLabel = new Label(result);
-        resultLabel.setFont(Font.font("Serif", FontWeight.BOLD, 36));
+        resultLabel.setFont(Responsive.font("Serif", FontWeight.BOLD, 52));
         Paint textColor = Color.web("#2e7d32");
-        if(result.equals("INCORRECT"))
+        if (result.equals("INCORRECT")) {
             textColor = Color.web("#c62828");
-        else if (result.equals("CLOSE")) {
+        } else if (result.equals("CLOSE")) {
             textColor = Color.web("#f9a825");
         }
         resultLabel.setTextFill(textColor);
 
-        // ── nav buttons ───────────────────────────────────────────────────────
-        Button prevBtn  = new Button("PREVIOUS");
+        Button prevBtn = new Button("PREVIOUS");
         Button retryBtn = new Button("RETRY");
-        Button nextBtn  = new Button(sp.isLastCard() ? "FINISH" : "NEXT");
+        Button nextBtn = new Button(sp.isLastCard() ? "FINISH" : "NEXT");
 
         String navDefault = "-fx-background-color: #e6eaf5; -fx-border-color: "
                 + StudyPanel.PRIMARY_BLUE + "; -fx-border-radius: 8;"
-                + " -fx-cursor: hand; -fx-font-size: 13;";
+                + " -fx-cursor: hand; -fx-font-size: 18px;";
         String navHover = "-fx-background-color: #c9d4ef; -fx-border-color: "
                 + StudyPanel.PRIMARY_BLUE + "; -fx-border-radius: 8;"
-                + " -fx-cursor: hand; -fx-font-size: 13;";
+                + " -fx-cursor: hand; -fx-font-size: 18px;";
 
-        for (Button b : new Button[]{prevBtn, retryBtn, nextBtn}) {
-            b.setPrefWidth(130);
-            b.setPrefHeight(38);
-            b.setStyle(navDefault);
-            b.setOnMouseEntered(e -> b.setStyle(navHover));
-            b.setOnMouseExited(e  -> b.setStyle(navDefault));
+        for (Button button : new Button[]{prevBtn, retryBtn, nextBtn}) {
+            button.setPrefWidth(Responsive.size(175));
+            button.setPrefHeight(Responsive.size(52));
+            button.setStyle(navDefault);
+            button.setOnMouseEntered(e -> button.setStyle(navHover));
+            button.setOnMouseExited(e -> button.setStyle(navDefault));
         }
 
         prevBtn.setDisable(sp.isFirstCard());
-
-        prevBtn.setOnAction(e  -> sp.goPrevious());
+        prevBtn.setOnAction(e -> sp.goPrevious());
         retryBtn.setOnAction(e -> sp.goRetry());
-        nextBtn.setOnAction(e  -> sp.goNext());
+        nextBtn.setOnAction(e -> sp.goNext());
 
         HBox navRow = new HBox(12);
         navRow.setAlignment(Pos.CENTER);
         navRow.getChildren().addAll(prevBtn, retryBtn, nextBtn);
 
-        Region bottomFiller = new Region();
-        VBox.setVgrow(bottomFiller, Priority.ALWAYS);
+        VBox bottomResult = new VBox(14);
+        bottomResult.setAlignment(Pos.CENTER);
+        bottomResult.getChildren().addAll(resultLabel, navRow);
 
-        resultArea.getChildren().addAll(header, questionBox, answerSection, resultLabel, bottomFiller, navRow);
+        resultArea.getChildren().addAll(header, questionBox, answerSection, bottomSpacer, bottomResult);
         wrapper.getChildren().add(resultArea);
         return wrapper;
+    }
+
+    private static String feedbackMessage(String result, boolean exactMatch) {
+        if ("CORRECT".equals(result) && exactMatch) {
+            return "Correct. Your answer matches the expected answer.";
+        }
+        if ("CORRECT".equals(result)) {
+            return "Accepted. The checker allows minor spelling differences, so review the expected answer to make sure the meaning is still right.";
+        }
+        if ("CLOSE".equals(result)) {
+            return "Close. Your answer is similar, but it may be missing an important detail. Compare it with the expected answer before moving on.";
+        }
+        return "Incorrect. Review the expected answer, then retry the card when you are ready.";
     }
 }

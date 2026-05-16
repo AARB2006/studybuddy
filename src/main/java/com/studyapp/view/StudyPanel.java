@@ -115,7 +115,12 @@ public class StudyPanel {
 
     // ── center swappers ───────────────────────────────────────────────────────
     void showQuestion() {
-        mainLayout.setCenter(QuestionPanel.build(this, flashcards.get(currentIndex), deckData));
+        mainLayout.setCenter(QuestionPanel.build(
+                this,
+                flashcards.get(currentIndex),
+                deckData,
+                currentIndex + 1,
+                flashcards.size()));
     }
 
     void orderCards(){
@@ -274,20 +279,22 @@ public class StudyPanel {
 
     // ── sidebar (built once, never replaced) ──────────────────────────────────
     private VBox buildSidebar() {
-        VBox sidebar = new VBox(15);
-        sidebar.setPadding(new Insets(20));
-        sidebar.setPrefWidth(250);
-        sidebar.setMinWidth(250);
-        sidebar.setMaxWidth(250);
+        VBox sidebar = new VBox(18);
+        sidebar.setPadding(Responsive.insets(20, 24, 20, 24));
+        sidebar.setPrefWidth(Responsive.size(290));
+        sidebar.setMinWidth(Responsive.size(290));
+        sidebar.setMaxWidth(Responsive.size(290));
         sidebar.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("Study Assistant\nApplication");
-        title.setFont(Font.font("Serif", 18));
+        title.setFont(Responsive.font("Serif", 38));
+        title.setWrapText(true);
+        title.setMaxWidth(Responsive.size(242));
         title.setTextFill(Color.web(PRIMARY_BLUE));
         VBox.setMargin(title, new Insets(0, 0, 10, 0));
 
-        VBox buttonBox = new VBox(15);
-        buttonBox.setPadding(new Insets(20));
+        VBox buttonBox = new VBox(18);
+        buttonBox.setPadding(Responsive.insets(24));
         buttonBox.setStyle(BORDER_STYLE);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
@@ -295,23 +302,24 @@ public class StudyPanel {
         StackPane arcStack = new StackPane();
         arcStack.setPadding(new Insets(10, 0, 0, 0));
 
-        Arc backgroundArc = new Arc(0, 0, 50, 50, 180, -180);
+        Arc backgroundArc = new Arc(0, 0, 74, 74, 180, -180);
         backgroundArc.setFill(Color.TRANSPARENT);
         backgroundArc.setStroke(Color.web("#e6eaf5"));
-        backgroundArc.setStrokeWidth(12);
+        backgroundArc.setStrokeWidth(18);
         backgroundArc.setType(ArcType.OPEN);
         backgroundArc.setStrokeLineCap(StrokeLineCap.ROUND);
 
-        progressArc = new Arc(0, 0, 50, 50, 180, 0);
+        progressArc = new Arc(0, 0, 74, 74, 180, 0);
         progressArc.setFill(Color.TRANSPARENT);
         progressArc.setStroke(Color.web(HEADER_BLUE));
-        progressArc.setStrokeWidth(12);
+        progressArc.setStrokeWidth(18);
         progressArc.setType(ArcType.OPEN);
         progressArc.setStrokeLineCap(StrokeLineCap.ROUND);
 
         pctLabel = new Label("0%");
-        pctLabel.setFont(Font.font("Serif", FontWeight.BOLD, 20));
-        pctLabel.setTranslateY(5);
+        pctLabel.setFont(Responsive.font("Serif", FontWeight.BOLD, 34));
+        pctLabel.setTextFill(Color.web(PRIMARY_BLUE));
+        pctLabel.setTranslateY(8);
 
         Group gaugeGroup = new Group(backgroundArc, progressArc);
         arcStack.getChildren().addAll(gaugeGroup, pctLabel);
@@ -321,8 +329,10 @@ public class StudyPanel {
         stats.setAlignment(Pos.CENTER_LEFT);
         correctLbl  = new Label("Correct: 0");
         attemptsLbl = new Label("Attempts: 0");
-        correctLbl.setFont(Font.font("Serif", 18));
-        attemptsLbl.setFont(Font.font("Serif", 18));
+        correctLbl.setFont(Responsive.font("Serif", FontWeight.BOLD, 24));
+        attemptsLbl.setFont(Responsive.font("Serif", FontWeight.BOLD, 24));
+        correctLbl.setTextFill(Color.web(PRIMARY_BLUE));
+        attemptsLbl.setTextFill(Color.web(PRIMARY_BLUE));
         stats.getChildren().addAll(correctLbl, attemptsLbl);
 
         Region spacer = new Region();
@@ -331,13 +341,14 @@ public class StudyPanel {
         // ── leave button ──
         Button leaveBtn = new Button("LEAVE");
         leaveBtn.setMaxWidth(Double.MAX_VALUE);
-        leaveBtn.setFont(Font.font("Serif", 16));
+        leaveBtn.setPrefHeight(Responsive.size(56));
+        leaveBtn.setFont(Responsive.font("Serif", 20));
         String leaveDefault = "-fx-background-color: #ff9999; -fx-text-fill: black; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         String leaveHover = "-fx-background-color: #ff6666; -fx-text-fill: white; -fx-border-color: "
-                + PRIMARY_BLUE + "; -fx-border-radius: 5; -fx-background-radius: 5;"
-                + " -fx-padding: 10 15; -fx-cursor: hand;";
+                + PRIMARY_BLUE + "; -fx-border-radius: 7; -fx-background-radius: 7;"
+                + " -fx-padding: 14 18; -fx-cursor: hand;";
         leaveBtn.setStyle(leaveDefault);
         leaveBtn.setOnMouseEntered(e -> leaveBtn.setStyle(leaveHover));
         leaveBtn.setOnMouseExited(e  -> leaveBtn.setStyle(leaveDefault));

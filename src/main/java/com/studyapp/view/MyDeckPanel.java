@@ -75,8 +75,8 @@ public class MyDeckPanel {
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         Button newBtn = createToolbarButton("New");
-        Button importBtn = createToolbarButton("Import");
-        Button exportBtn = createToolbarButton("Export");
+        Button importBtn = createToolbarButton("Import Cards");
+        Button exportBtn = createToolbarButton("Export Deck");
 
         newBtn.setOnAction(e -> showCreateDeckDialog(mainLayout, mc));
 
